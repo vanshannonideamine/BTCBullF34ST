@@ -14,7 +14,7 @@
             background: #000;
             font-family: 'Fredoka One', cursive;
         }
-        canvas { display: block; }
+        canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
         
         .scanlines {
             position: fixed;
@@ -147,7 +147,7 @@
             <div class="glass p-8 text-center max-w-lg w-full mx-4 pop border-yellow-500/20">
                 <div class="text-6xl mb-2 float">🐂</div>
                 <h1 class="text-4xl md:text-5xl text-yellow-400 mb-1 tracking-wide">BTC BULL RUN</h1>
-                <p class="text-gray-500 text-[10px] retro tracking-wider mb-6">CATCH SATS ACROSS TIME</p>
+                <p class="text-gray-500 text-[10px] retro tracking-wider mb-6">CATCH SATS. DODGE BEARS. SURVIVE TIME.</p>
 
                 <div class="mb-6">
                     <p class="text-gray-500 text-[9px] uppercase tracking-widest mb-3 retro">Difficulty</p>
@@ -174,9 +174,10 @@
                     START RUN ▶
                 </button>
                 <div class="mt-3 flex justify-center gap-4 text-[10px] text-gray-500">
-                    <span>🖱️ Mouse</span>
+                    <span>🖱️ Move</span>
                     <span>👆 Touch</span>
                     <span>⌨️ Arrows</span>
+                    <span>␣ Dash</span>
                 </div>
             </div>
         </div>
@@ -192,11 +193,12 @@
                     </p>
                     <ul class="text-sm text-gray-700 space-y-2 mb-3">
                         <li class="flex gap-2"><span class="text-yellow-500">₿</span> <span>Catch falling Bitcoins</span></li>
-                        <li class="flex gap-2"><span class="text-red-500">📉</span> <span>Miss one = chart crash, lose a life</span></li>
-                        <li class="flex gap-2"><span class="text-green-500">🚀</span> <span>Combos multiply your score</span></li>
-                        <li class="flex gap-2"><span class="text-purple-500">🕐</span> <span>Every level advances the year. The future gets weird.</span></li>
+                        <li class="flex gap-2"><span class="text-red-500">🐻</span> <span><strong>DODGE the Bears</strong> — they warp in from the future</span></li>
+                        <li class="flex gap-2"><span class="text-green-500">🚀</span> <span>Combos multiply score</span></li>
+                        <li class="flex gap-2"><span class="text-purple-500">␣</span> <span><strong>SPACE to DASH</strong> — emergency escape</span></li>
+                        <li class="flex gap-2"><span class="text-cyan-500">🕐</span> <span>Each level = new year, new world</span></li>
                     </ul>
-                    <p class="text-xs text-gray-500 italic">"2027 is coming. You won't believe the charts."</p>
+                    <p class="text-xs text-gray-500 italic">"The bears are coming through time itself. Good luck."</p>
                 </div>
                 <button id="tutBtn" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition hover:scale-105">
                     Let's run 🐂
@@ -243,221 +245,197 @@
 
     <script>
         // ============================================
-        // BTC BULL RUN — TIME TRAVEL EDITION
+        // BTC BULL RUN — TIME TRAVEL + SOUND + BEARS
         // Single file, zero dependencies, zero signups
         // ============================================
 
         const DIFFICULTY = {
-            easy:   { lives: 3, spawnRate: 75, speedMin: 1.0, speedMax: 2.5, hitBonus: 14 },
-            normal: { lives: 2, spawnRate: 58, speedMin: 1.8, speedMax: 3.6, hitBonus: 8 },
-            hard:   { lives: 1, spawnRate: 42, speedMin: 2.8, speedMax: 5.0, hitBonus: 2 }
+            easy:   { lives: 3, spawnRate: 75, bearRate: 180, speedMin: 1.0, speedMax: 2.5, hitBonus: 14 },
+            normal: { lives: 2, spawnRate: 58, bearRate: 140, speedMin: 1.8, speedMax: 3.6, hitBonus: 8 },
+            hard:   { lives: 1, spawnRate: 42, bearRate: 100, speedMin: 2.8, speedMax: 5.0, hitBonus: 2 }
         };
 
-        // YEAR-BASED LEVELS — each level = one year forward
-        // Backgrounds evolve from present trading desk to far-future sci-fi
         const LEVELS = [
-            {   // Level 1 — 2025: Present day trading desk
-                year: 2025,
-                name: "The Desk",
-                bg: "#0c0c14",
-                grid: "rgba(0,200,100,0.05)",
-                gridSize: 50,
-                chartUp: "#00CC66",
-                chartDown: "#CC3333",
-                glowUp: "rgba(0,200,100,0.15)",
-                glowDown: "rgba(200,50,50,0.15)",
-                accent: "#00CC66",
-                coinRate: 1.0,
-                starCount: 0,
-                hasBuildings: false,
-                hasRings: false,
-                hasNebula: false,
-                hasGridFloor: false,
-                scanlineIntensity: 0.12,
-                description: "Just another Tuesday at the trading desk."
-            },
-            {   // Level 2 — 2026: Early sci-fi, holographic displays
-                year: 2026,
-                name: "Holo Terminal",
-                bg: "#080a18",
-                grid: "rgba(0,220,255,0.06)",
-                gridSize: 40,
-                chartUp: "#00DDFF",
-                chartDown: "#FF3366",
-                glowUp: "rgba(0,220,255,0.2)",
-                glowDown: "rgba(255,50,100,0.2)",
-                accent: "#00DDFF",
-                coinRate: 1.08,
-                starCount: 30,
-                hasBuildings: false,
-                hasRings: true,
-                hasNebula: false,
-                hasGridFloor: true,
-                scanlineIntensity: 0.1,
-                description: "Holographic charts. Still losing money."
-            },
-            {   // Level 3 — 2027: Cyberpunk city, neon rain
-                year: 2027,
-                name: "Neo Tokyo",
-                bg: "#0a0014",
-                grid: "rgba(255,0,200,0.05)",
-                gridSize: 35,
-                chartUp: "#FF00CC",
-                chartDown: "#00FF99",
-                glowUp: "rgba(255,0,200,0.25)",
-                glowDown: "rgba(0,255,150,0.25)",
-                accent: "#FF00CC",
-                coinRate: 1.15,
-                starCount: 60,
-                hasBuildings: true,
-                hasRings: true,
-                hasNebula: false,
-                hasGridFloor: true,
-                scanlineIntensity: 0.08,
-                description: "Neon rain. Cyber-bulls. Same volatility."
-            },
-            {   // Level 4 — 2028: Orbital station, Earth below
-                year: 2028,
-                name: "Orbit Station",
-                bg: "#000510",
-                grid: "rgba(100,200,255,0.04)",
-                gridSize: 30,
-                chartUp: "#66CCFF",
-                chartDown: "#FF6644",
-                glowUp: "rgba(100,200,255,0.2)",
-                glowDown: "rgba(255,100,50,0.2)",
-                accent: "#66CCFF",
-                coinRate: 1.22,
-                starCount: 120,
-                hasBuildings: false,
-                hasRings: false,
-                hasNebula: true,
-                hasGridFloor: false,
-                scanlineIntensity: 0.06,
-                description: "Trading from orbit. Gravity is optional."
-            },
-            {   // Level 5 — 2029: Mars colony, red dust storms
-                year: 2029,
-                name: "Mars Base",
-                bg: "#140502",
-                grid: "rgba(255,100,50,0.05)",
-                gridSize: 45,
-                chartUp: "#FF8844",
-                chartDown: "#AA2222",
-                glowUp: "rgba(255,120,50,0.2)",
-                glowDown: "rgba(170,30,30,0.2)",
-                accent: "#FF8844",
-                coinRate: 1.28,
-                starCount: 80,
-                hasBuildings: true,
-                hasRings: false,
-                hasNebula: false,
-                hasGridFloor: true,
-                scanlineIntensity: 0.09,
-                description: "Red planet. Red candles. Some things don't change."
-            },
-            {   // Level 6 — 2030: Deep space, binary star system
-                year: 2030,
-                name: "Binary Stars",
-                bg: "#050008",
-                grid: "rgba(200,100,255,0.04)",
-                gridSize: 25,
-                chartUp: "#CC88FF",
-                chartDown: "#FF5588",
-                glowUp: "rgba(200,100,255,0.25)",
-                glowDown: "rgba(255,80,130,0.25)",
-                accent: "#CC88FF",
-                coinRate: 1.35,
-                starCount: 200,
-                hasBuildings: false,
-                hasRings: true,
-                hasNebula: true,
-                hasGridFloor: false,
-                scanlineIntensity: 0.05,
-                description: "Two suns. Infinite volatility."
-            },
-            {   // Level 7 — 2031: Dyson sphere interior
-                year: 2031,
-                name: "Dyson Shell",
-                bg: "#0a0a00",
-                grid: "rgba(255,220,0,0.05)",
-                gridSize: 20,
-                chartUp: "#FFDD00",
-                chartDown: "#FF4400",
-                glowUp: "rgba(255,220,0,0.3)",
-                glowDown: "rgba(255,60,0,0.3)",
-                accent: "#FFDD00",
-                coinRate: 1.42,
-                starCount: 50,
-                hasBuildings: false,
-                hasRings: true,
-                hasNebula: true,
-                hasGridFloor: true,
-                scanlineIntensity: 0.04,
-                description: "Harvesting a star's energy to mine harder."
-            },
-            {   // Level 8 — 2032: Wormhole transit, reality bending
-                year: 2032,
-                name: "The Rift",
-                bg: "#000000",
-                grid: "rgba(0,255,150,0.03)",
-                gridSize: 15,
-                chartUp: "#00FF99",
-                chartDown: "#FF0099",
-                glowUp: "rgba(0,255,150,0.35)",
-                glowDown: "rgba(255,0,150,0.35)",
-                accent: "#00FF99",
-                coinRate: 1.5,
-                starCount: 300,
-                hasBuildings: false,
-                hasRings: true,
-                hasNebula: true,
-                hasGridFloor: true,
-                scanlineIntensity: 0.03,
-                description: "Reality is optional. Sats are not."
-            },
-            {   // Level 9 — 2033: Post-singularity, pure data realm
-                year: 2033,
-                name: "Singularity",
-                bg: "#000",
-                grid: "rgba(255,255,255,0.02)",
-                gridSize: 10,
-                chartUp: "#FFFFFF",
-                chartDown: "#888888",
-                glowUp: "rgba(255,255,255,0.4)",
-                glowDown: "rgba(150,150,150,0.3)",
-                accent: "#FFFFFF",
-                coinRate: 1.6,
-                starCount: 500,
-                hasBuildings: false,
-                hasRings: true,
-                hasNebula: true,
-                hasGridFloor: true,
-                scanlineIntensity: 0.02,
-                description: "You are the chart now."
-            },
-            {   // Level 10 — 2034: The heat death, only Bitcoin remains
-                year: 2034,
-                name: "Heat Death",
-                bg: "#020205",
-                grid: "rgba(255,140,0,0.04)",
-                gridSize: 60,
-                chartUp: "#FF8800",
-                chartDown: "#FF2200",
-                glowUp: "rgba(255,140,0,0.4)",
-                glowDown: "rgba(255,30,0,0.3)",
-                accent: "#FF8800",
-                coinRate: 1.75,
-                starCount: 20,
-                hasBuildings: false,
-                hasRings: false,
-                hasNebula: false,
-                hasGridFloor: false,
-                scanlineIntensity: 0.15,
-                description: "At the end of time, there is only HODL."
-            }
+            { year: 2025, name: "The Desk", bg: "#0c0c14", grid: "rgba(0,200,100,0.05)", gridSize: 50, chartUp: "#00CC66", chartDown: "#CC3333", glowUp: "rgba(0,200,100,0.15)", glowDown: "rgba(200,50,50,0.15)", accent: "#00CC66", coinRate: 1.0, starCount: 0, hasBuildings: false, hasRings: false, hasNebula: false, hasGridFloor: false, scanlineIntensity: 0.12, description: "Just another Tuesday at the trading desk." },
+            { year: 2026, name: "Holo Terminal", bg: "#080a18", grid: "rgba(0,220,255,0.06)", gridSize: 40, chartUp: "#00DDFF", chartDown: "#FF3366", glowUp: "rgba(0,220,255,0.2)", glowDown: "rgba(255,50,100,0.2)", accent: "#00DDFF", coinRate: 1.08, starCount: 30, hasBuildings: false, hasRings: true, hasNebula: false, hasGridFloor: true, scanlineIntensity: 0.1, description: "Holographic charts. Still losing money." },
+            { year: 2027, name: "Neo Tokyo", bg: "#0a0014", grid: "rgba(255,0,200,0.05)", gridSize: 35, chartUp: "#FF00CC", chartDown: "#00FF99", glowUp: "rgba(255,0,200,0.25)", glowDown: "rgba(0,255,150,0.25)", accent: "#FF00CC", coinRate: 1.15, starCount: 60, hasBuildings: true, hasRings: true, hasNebula: false, hasGridFloor: true, scanlineIntensity: 0.08, description: "Neon rain. Cyber-bulls. Same volatility." },
+            { year: 2028, name: "Orbit Station", bg: "#000510", grid: "rgba(100,200,255,0.04)", gridSize: 30, chartUp: "#66CCFF", chartDown: "#FF6644", glowUp: "rgba(100,200,255,0.2)", glowDown: "rgba(255,100,50,0.2)", accent: "#66CCFF", coinRate: 1.22, starCount: 120, hasBuildings: false, hasRings: false, hasNebula: true, hasGridFloor: false, scanlineIntensity: 0.06, description: "Trading from orbit. Gravity is optional." },
+            { year: 2029, name: "Mars Base", bg: "#140502", grid: "rgba(255,100,50,0.05)", gridSize: 45, chartUp: "#FF8844", chartDown: "#AA2222", glowUp: "rgba(255,120,50,0.2)", glowDown: "rgba(170,30,30,0.2)", accent: "#FF8844", coinRate: 1.28, starCount: 80, hasBuildings: true, hasRings: false, hasNebula: false, hasGridFloor: true, scanlineIntensity: 0.09, description: "Red planet. Red candles. Some things don't change." },
+            { year: 2030, name: "Binary Stars", bg: "#050008", grid: "rgba(200,100,255,0.04)", gridSize: 25, chartUp: "#CC88FF", chartDown: "#FF5588", glowUp: "rgba(200,100,255,0.25)", glowDown: "rgba(255,80,130,0.25)", accent: "#CC88FF", coinRate: 1.35, starCount: 200, hasBuildings: false, hasRings: true, hasNebula: true, hasGridFloor: false, scanlineIntensity: 0.05, description: "Two suns. Infinite volatility." },
+            { year: 2031, name: "Dyson Shell", bg: "#0a0a00", grid: "rgba(255,220,0,0.05)", gridSize: 20, chartUp: "#FFDD00", chartDown: "#FF4400", glowUp: "rgba(255,220,0,0.3)", glowDown: "rgba(255,60,0,0.3)", accent: "#FFDD00", coinRate: 1.42, starCount: 50, hasBuildings: false, hasRings: true, hasNebula: true, hasGridFloor: true, scanlineIntensity: 0.04, description: "Harvesting a star's energy to mine harder." },
+            { year: 2032, name: "The Rift", bg: "#000000", grid: "rgba(0,255,150,0.03)", gridSize: 15, chartUp: "#00FF99", chartDown: "#FF0099", glowUp: "rgba(0,255,150,0.35)", glowDown: "rgba(255,0,150,0.35)", accent: "#00FF99", coinRate: 1.5, starCount: 300, hasBuildings: false, hasRings: true, hasNebula: true, hasGridFloor: true, scanlineIntensity: 0.03, description: "Reality is optional. Sats are not." },
+            { year: 2033, name: "Singularity", bg: "#000", grid: "rgba(255,255,255,0.02)", gridSize: 10, chartUp: "#FFFFFF", chartDown: "#888888", glowUp: "rgba(255,255,255,0.4)", glowDown: "rgba(150,150,150,0.3)", accent: "#FFFFFF", coinRate: 1.6, starCount: 500, hasBuildings: false, hasRings: true, hasNebula: true, hasGridFloor: true, scanlineIntensity: 0.02, description: "You are the chart now." },
+            { year: 2034, name: "Heat Death", bg: "#020205", grid: "rgba(255,140,0,0.04)", gridSize: 60, chartUp: "#FF8800", chartDown: "#FF2200", glowUp: "rgba(255,140,0,0.4)", glowDown: "rgba(255,30,0,0.3)", accent: "#FF8800", coinRate: 1.75, starCount: 20, hasBuildings: false, hasRings: false, hasNebula: false, hasGridFloor: false, scanlineIntensity: 0.15, description: "At the end of time, there is only HODL." }
         ];
 
+        // ============================================
+        // AUDIO ENGINE — Procedural, zero files
+        // ============================================
+        const AudioEngine = {
+            ctx: null,
+            initialized: false,
+            
+            init() {
+                if(this.initialized) return;
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.initialized = true;
+            },
+            
+            // Square wave beep (retro coin sound)
+            coin() {
+                if(!this.initialized) return;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'square';
+                o.frequency.setValueAtTime(880, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(1760, this.ctx.currentTime + 0.08);
+                g.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.12);
+            },
+            
+            // Gold coin — richer arpeggio
+            goldCoin() {
+                if(!this.initialized) return;
+                [523, 659, 784, 1047].forEach((freq, i) => {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'square';
+                    o.frequency.setValueAtTime(freq, this.ctx.currentTime + i*0.04);
+                    g.gain.setValueAtTime(0.12, this.ctx.currentTime + i*0.04);
+                    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i*0.04 + 0.1);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(this.ctx.currentTime + i*0.04);
+                    o.stop(this.ctx.currentTime + i*0.04 + 0.1);
+                });
+            },
+            
+            // Rainbow coin — major chord sweep
+            rainbowCoin() {
+                if(!this.initialized) return;
+                [440, 554, 659, 880, 1109].forEach((freq, i) => {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'sawtooth';
+                    o.frequency.setValueAtTime(freq, this.ctx.currentTime + i*0.03);
+                    g.gain.setValueAtTime(0.1, this.ctx.currentTime + i*0.03);
+                    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i*0.03 + 0.15);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(this.ctx.currentTime + i*0.03);
+                    o.stop(this.ctx.currentTime + i*0.03 + 0.15);
+                });
+            },
+            
+            // Bear hit — low noise crash
+            bearHit() {
+                if(!this.initialized) return;
+                const bufferSize = this.ctx.sampleRate * 0.3;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for(let i=0; i<bufferSize; i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/bufferSize, 2);
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const g = this.ctx.createGain();
+                const f = this.ctx.createBiquadFilter();
+                f.type = 'lowpass';
+                f.frequency.value = 400;
+                g.gain.setValueAtTime(0.25, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                noise.connect(f); f.connect(g); g.connect(this.ctx.destination);
+                noise.start();
+            },
+            
+            // Miss — descending sad tone
+            miss() {
+                if(!this.initialized) return;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'sine';
+                o.frequency.setValueAtTime(400, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.3);
+                g.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.3);
+            },
+            
+            // Laser eyes — pew pew
+            laser() {
+                if(!this.initialized) return;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'sawtooth';
+                o.frequency.setValueAtTime(2000, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.15);
+                g.gain.setValueAtTime(0.08, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.15);
+            },
+            
+            // Dash — quick zip
+            dash() {
+                if(!this.initialized) return;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = 'square';
+                o.frequency.setValueAtTime(200, this.ctx.currentTime);
+                o.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.1);
+                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.1);
+            },
+            
+            // Level up — fanfare
+            levelUp() {
+                if(!this.initialized) return;
+                [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'square';
+                    o.frequency.setValueAtTime(freq, this.ctx.currentTime + i*0.08);
+                    g.gain.setValueAtTime(0.12, this.ctx.currentTime + i*0.08);
+                    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i*0.08 + 0.2);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(this.ctx.currentTime + i*0.08);
+                    o.stop(this.ctx.currentTime + i*0.08 + 0.2);
+                });
+            },
+            
+            // Background music — simple arpeggio loop
+            musicPlaying: false,
+            musicInterval: null,
+            
+            startMusic() {
+                if(!this.initialized || this.musicPlaying) return;
+                this.musicPlaying = true;
+                const notes = [220, 261, 329, 392, 440, 392, 329, 261];
+                let noteIndex = 0;
+                this.musicInterval = setInterval(() => {
+                    if(state !== 'PLAYING') return;
+                    const o = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    o.type = 'square';
+                    o.frequency.setValueAtTime(notes[noteIndex], this.ctx.currentTime);
+                    g.gain.setValueAtTime(0.03, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(); o.stop(this.ctx.currentTime + 0.15);
+                    noteIndex = (noteIndex + 1) % notes.length;
+                }, 180);
+            },
+            
+            stopMusic() {
+                this.musicPlaying = false;
+                if(this.musicInterval) { clearInterval(this.musicInterval); this.musicInterval = null; }
+            }
+        };
+
+        // ============================================
+        // CANVAS & STATE
+        // ============================================
         const bgC = document.getElementById('bgCanvas');
         const bgX = bgC.getContext('2d');
         const gC = document.getElementById('gameCanvas');
@@ -470,12 +448,14 @@
         let chartData = [];
         let mouseX = innerWidth/2, mouseY = innerHeight/2;
         let keys = {};
+        let screenShake = 0;
 
-        let bull = { x:0, y:0, tx:0, ty:0, r:40, ang:0, wob:0, speed:0.11, charge:0 };
+        let bull = { x:0, y:0, tx:0, ty:0, r:42, ang:0, wob:0, speed:0.11, dashCooldown: 0, isDashing: false };
         let coins = [], particles = [], floatTexts = [];
+        let bears = []; // BEARS from time/space
         let stars = [], buildings = [], nebulaParticles = [];
 
-        let leaderboard = JSON.parse(localStorage.getItem('btcBullLB_v2')) || [
+        let leaderboard = JSON.parse(localStorage.getItem('btcBullLB_v3')) || [
             {name:"Satoshi", score:25000, level:10, year:2034, diff:"hard"},
             {name:"LaserEyes", score:15000, level:7, year:2031, diff:"hard"},
             {name:"MoonBoy", score:8000, level:5, year:2029, diff:"normal"},
@@ -489,10 +469,13 @@
             addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
             addEventListener('touchmove', e => { e.preventDefault(); mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; }, {passive:false});
             addEventListener('touchstart', e => { mouseX = e.touches[0].clientX; mouseY = e.touches[0].clientY; }, {passive:false});
-            addEventListener('keydown', e => keys[e.key] = true);
+            addEventListener('keydown', e => {
+                keys[e.key] = true;
+                if(e.code === 'Space' && state === 'PLAYING') doDash();
+            });
             addEventListener('keyup', e => keys[e.key] = false);
 
-            document.getElementById('startBtn').onclick = showTutorial;
+            document.getElementById('startBtn').onclick = () => { AudioEngine.init(); showTutorial(); };
             document.getElementById('tutBtn').onclick = startGame;
             document.getElementById('restartBtn').onclick = startGame;
             document.getElementById('shareBtn').onclick = shareScore;
@@ -578,20 +561,49 @@
             document.getElementById('gameOverScreen').classList.add('hidden');
             bull.y = innerHeight + 120;
             bull.ty = innerHeight - 160;
+            AudioEngine.startMusic();
         }
 
         function reset() {
             const cfg = DIFFICULTY[diff];
             score = 0; level = 1; lives = cfg.lives; combo = 0; maxCombo = 0;
-            coins = []; particles = []; floatTexts = [];
-            frames = 0; gameSpeed = 1;
+            coins = []; particles = []; floatTexts = []; bears = [];
+            frames = 0; gameSpeed = 1; screenShake = 0;
             bull.x = innerWidth/2; bull.y = innerHeight + 120;
             bull.tx = innerWidth/2; bull.ty = innerHeight - 160;
+            bull.dashCooldown = 0; bull.isDashing = false;
             updateUI();
+        }
+
+        function doDash() {
+            if(bull.dashCooldown > 0 || bull.isDashing) return;
+            bull.isDashing = true;
+            bull.dashCooldown = 60; // 1 second at 60fps
+            AudioEngine.dash();
+            
+            // Dash burst in movement direction
+            const dashDist = 80;
+            const dx = Math.cos(bull.ang) * dashDist;
+            const dy = Math.sin(bull.ang) * dashDist;
+            bull.x += dx;
+            bull.y += dy;
+            
+            // Dash particles
+            for(let i=0; i<10; i++) {
+                particles.push({
+                    x: bull.x, y: bull.y,
+                    vx: -dx*0.1 + (Math.random()-0.5)*4,
+                    vy: -dy*0.1 + (Math.random()-0.5)*4,
+                    life: 0.6, color: '#00DDFF', size: 3, grav: 0
+                });
+            }
+            
+            setTimeout(() => bull.isDashing = false, 200);
         }
 
         function gameOver() {
             state = 'GAMEOVER';
+            AudioEngine.stopMusic();
             const entry = {
                 name: document.getElementById('playerName').value.trim() || 'Anonymous',
                 score, level, year: LEVELS[Math.min(level-1, LEVELS.length-1)].year, diff,
@@ -600,7 +612,7 @@
             leaderboard.push(entry);
             leaderboard.sort((a,b) => b.score - a.score);
             leaderboard = leaderboard.slice(0, 20);
-            localStorage.setItem('btcBullLB_v2', JSON.stringify(leaderboard));
+            localStorage.setItem('btcBullLB_v3', JSON.stringify(leaderboard));
 
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
             document.getElementById('finalScore').innerText = score.toLocaleString();
@@ -649,6 +661,9 @@
             document.getElementById('livesDisplay').innerText = lives;
         }
 
+        // ============================================
+        // ENTITY SPAWNING
+        // ============================================
         function spawnCoin() {
             const cfg = DIFFICULTY[diff];
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
@@ -664,7 +679,26 @@
                 rot: Math.random()*Math.PI*2,
                 rotSpd: (Math.random()-0.5)*0.05,
                 type: isRainbow?'RAINBOW':isGold?'GOLD':'NORMAL',
-                pulse: 0
+                pulse: 0,
+                trail: []
+            });
+        }
+
+        function spawnBear() {
+            const cfg = DIFFICULTY[diff];
+            const side = Math.random() > 0.5 ? 'left' : 'right';
+            const x = side === 'left' ? -40 : innerWidth + 40;
+            const y = Math.random() * (innerHeight * 0.6) + 50;
+            const targetX = side === 'left' ? innerWidth + 100 : -100;
+            
+            bears.push({
+                x, y,
+                tx: targetX, ty: y + (Math.random()-0.5)*100,
+                speed: 1.5 + Math.random() * 2 + gameSpeed * 0.5,
+                r: 28,
+                wob: Math.random() * Math.PI * 2,
+                portalPhase: 0, // 0-1, spawn animation
+                side
             });
         }
 
@@ -679,6 +713,9 @@
             floatTexts.push({x,y,text,color,life:1,vy:-2.2,scale:1});
         }
 
+        // ============================================
+        // UPDATE LOOP
+        // ============================================
         function update() {
             if(state !== 'PLAYING') {
                 if(state === 'MENU') { bull.wob += 0.03; bull.y = innerHeight/2+Math.sin(bull.wob)*12; }
@@ -689,17 +726,25 @@
             const cfg = DIFFICULTY[diff];
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
 
-            // Level up every 600 sats
+            // Dash cooldown
+            if(bull.dashCooldown > 0) bull.dashCooldown--;
+
+            // Level up
             const newLevel = Math.min(Math.floor(score/600)+1, LEVELS.length);
             if(newLevel !== level) {
                 level = newLevel;
                 const newLvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
                 showNotif(`${newLvl.year}: ${newLvl.name}`);
+                AudioEngine.levelUp();
                 gameSpeed += 0.06;
                 updateUI();
             }
 
             if(frames%500===0) gameSpeed += 0.025;
+
+            // Screen shake decay
+            if(screenShake > 0) screenShake *= 0.9;
+            if(screenShake < 0.5) screenShake = 0;
 
             // Bull movement
             bull.tx = mouseX;
@@ -709,8 +754,9 @@
             if(keys['ArrowUp']||keys['w']) bull.ty -= 14;
             if(keys['ArrowDown']||keys['s']) bull.ty += 14;
 
-            bull.x += (bull.tx-bull.x)*bull.speed;
-            bull.y += (bull.ty-bull.y)*bull.speed;
+            const moveSpeed = bull.isDashing ? bull.speed * 2.5 : bull.speed;
+            bull.x += (bull.tx-bull.x)*moveSpeed;
+            bull.y += (bull.ty-bull.y)*moveSpeed;
             bull.x = Math.max(bull.r, Math.min(innerWidth-bull.r, bull.x));
             bull.y = Math.max(bull.r, Math.min(innerHeight-bull.r, bull.y));
 
@@ -723,13 +769,22 @@
             }
             bull.wob += 0.1;
 
-            // Coins
+            // Spawn coins
             const spawnMod = Math.max(22, Math.floor(cfg.spawnRate - gameSpeed*4));
             if(frames%spawnMod===0) spawnCoin();
 
+            // Spawn bears
+            const bearMod = Math.max(60, Math.floor(cfg.bearRate - gameSpeed*8));
+            if(frames%bearMod===0 && frames > 180) spawnBear(); // No bears first 3 seconds
+
+            // Update coins
             for(let i=coins.length-1;i>=0;i--) {
                 let c = coins[i];
                 c.y += c.speed; c.rot += c.rotSpd; c.pulse += 0.07;
+                
+                // Trail effect
+                c.trail.push({x:c.x, y:c.y});
+                if(c.trail.length > 8) c.trail.shift();
 
                 const dist = Math.hypot(bull.x-c.x, bull.y-c.y);
                 if(dist < bull.r + c.r + cfg.hitBonus) {
@@ -743,6 +798,14 @@
                     explode(c.x,c.y,col,c.type==='RAINBOW'?28:14);
                     floatText(c.x,c.y-28,`+${pts}${combo>1?' '+combo+'x':''}`,col);
 
+                    // Sound
+                    if(c.type==='RAINBOW') AudioEngine.rainbowCoin();
+                    else if(c.type==='GOLD') AudioEngine.goldCoin();
+                    else AudioEngine.coin();
+
+                    // Flash
+                    screenShake = 2;
+
                     chartData[chartData.length-1] = Math.min(92, chartData[chartData.length-1]+10);
 
                     coins.splice(i,1);
@@ -753,12 +816,61 @@
                 if(c.y > innerHeight+40) {
                     combo = 0;
                     lives--;
+                    AudioEngine.miss();
                     for(let j=0;j<10;j++) chartData[chartData.length-1-j] = Math.max(5, chartData[chartData.length-1-j]-15);
                     explode(c.x, innerHeight-15, '#EF4444', 18);
                     floatText(c.x, innerHeight-45, 'MISS!', '#EF4444');
                     coins.splice(i,1);
                     updateUI();
                     if(lives<=0) { gameOver(); return; }
+                }
+            }
+
+            // Update bears
+            for(let i=bears.length-1;i>=0;i--) {
+                let b = bears[i];
+                b.wob += 0.08;
+                
+                // Portal spawn animation
+                if(b.portalPhase < 1) b.portalPhase += 0.05;
+
+                // Move toward target
+                const bdx = b.tx - b.x;
+                const bdy = b.ty - b.y;
+                const bdist = Math.hypot(bdx, bdy);
+                if(bdist > 5) {
+                    b.x += (bdx/bdist) * b.speed;
+                    b.y += (bdy/bdist) * b.speed * 0.3; // Slight vertical drift
+                } else {
+                    bears.splice(i,1);
+                    continue;
+                }
+
+                // Collision with bull
+                const dist = Math.hypot(bull.x-b.x, bull.y-b.y);
+                if(dist < bull.r + b.r + 5 && !bull.isDashing) {
+                    lives--;
+                    combo = 0;
+                    AudioEngine.bearHit();
+                    screenShake = 15;
+                    explode(b.x, b.y, '#8B5CF6', 25);
+                    floatText(b.x, b.y-30, 'BEAR ATTACK!', '#8B5CF6');
+                    bears.splice(i,1);
+                    updateUI();
+                    if(lives<=0) { gameOver(); return; }
+                } else if (dist < bull.r + b.r + 20 && bull.isDashing) {
+                    // Dash through bear = destroy it with bonus
+                    score += 50;
+                    AudioEngine.laser();
+                    explode(b.x, b.y, '#00DDFF', 20);
+                    floatText(b.x, b.y-30, 'DASH KILL! +50', '#00DDFF');
+                    bears.splice(i,1);
+                    updateUI();
+                }
+
+                // Remove if off screen
+                if((b.side === 'left' && b.x > innerWidth + 60) || (b.side === 'right' && b.x < -60)) {
+                    bears.splice(i,1);
                 }
             }
 
@@ -784,10 +896,33 @@
             }
         }
 
+        // ============================================
+        // RENDER
+        // ============================================
         function draw() {
-            gX.clearRect(0,0,innerWidth,innerHeight);
+            // Screen shake offset
+            const shakeX = screenShake > 0 ? (Math.random()-0.5)*screenShake : 0;
+            const shakeY = screenShake > 0 ? (Math.random()-0.5)*screenShake : 0;
+            
+            gX.save();
+            gX.translate(shakeX, shakeY);
+            
+            gX.clearRect(-20,-20,innerWidth+40,innerHeight+40);
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
 
+            // Coin trails
+            coins.forEach(c => {
+                if(c.trail.length > 1) {
+                    gX.strokeStyle = c.type==='RAINBOW'?`hsla(${frames*3%360},80%,60%,0.3)`:c.type==='GOLD'?'rgba(255,215,0,0.3)':'rgba(247,147,26,0.3)';
+                    gX.lineWidth = 2;
+                    gX.beginPath();
+                    gX.moveTo(c.trail[0].x, c.trail[0].y);
+                    for(let i=1;i<c.trail.length;i++) gX.lineTo(c.trail[i].x, c.trail[i].y);
+                    gX.stroke();
+                }
+            });
+
+            // Coins
             coins.forEach(c => {
                 gX.save();
                 gX.translate(c.x,c.y); gX.rotate(c.rot);
@@ -806,21 +941,24 @@
                 gX.strokeStyle = c.type==='RAINBOW'?'#fff':'#B45309';
                 gX.lineWidth = 2.5; gX.stroke();
 
-                // Bitcoin B symbol
                 gX.fillStyle = c.type==='RAINBOW'?'#fff':'#5D2E0C';
                 gX.font = `bold ${c.r}px 'Fredoka One'`;
                 gX.textAlign = 'center'; gX.textBaseline = 'middle';
                 gX.fillText('₿',0,1);
 
-                // Shine effect
                 gX.fillStyle = 'rgba(255,255,255,0.3)';
                 gX.beginPath(); gX.arc(-c.r*0.3,-c.r*0.3,c.r*0.25,0,Math.PI*2); gX.fill();
 
                 gX.restore();
             });
 
+            // Bears (pixelated NFT style)
+            bears.forEach(b => drawBear(b));
+
+            // Bull
             drawBull(bull.x, bull.y, bull.ang, bull.wob);
 
+            // Particles
             particles.forEach(p => {
                 gX.globalAlpha = p.life;
                 gX.fillStyle = p.color;
@@ -828,6 +966,7 @@
                 gX.globalAlpha = 1;
             });
 
+            // Float texts
             floatTexts.forEach(t => {
                 gX.save();
                 gX.globalAlpha = t.life;
@@ -840,6 +979,7 @@
                 gX.restore();
             });
 
+            // Combo
             if(combo>1) {
                 gX.save();
                 gX.globalAlpha = 0.35+Math.sin(frames*0.1)*0.15;
@@ -852,7 +992,22 @@
                 gX.restore();
             }
 
-            // Year/Level banner on level up
+            // Dash cooldown indicator
+            if(bull.dashCooldown > 0) {
+                const ratio = bull.dashCooldown / 60;
+                gX.fillStyle = 'rgba(0,200,255,0.2)';
+                gX.fillRect(bull.x - 30, bull.y + 50, 60 * (1-ratio), 4);
+                gX.strokeStyle = 'rgba(0,200,255,0.5)';
+                gX.lineWidth = 1;
+                gX.strokeRect(bull.x - 30, bull.y + 50, 60, 4);
+            } else {
+                gX.fillStyle = 'rgba(0,200,255,0.6)';
+                gX.font = "10px 'Press Start 2P'";
+                gX.textAlign = 'center';
+                gX.fillText('␣ DASH READY', bull.x, bull.y + 58);
+            }
+
+            // Level banner
             if(frames<90 && level>1) {
                 gX.save();
                 gX.globalAlpha = Math.max(0, 1-frames/90);
@@ -868,8 +1023,13 @@
                 gX.fillText(lvl.description, innerWidth/2, innerHeight/2+40);
                 gX.restore();
             }
+
+            gX.restore();
         }
 
+        // ============================================
+        // BACKGROUND
+        // ============================================
         function drawBg() {
             const w = bgC.width, h = bgC.height;
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)] || LEVELS[0];
@@ -877,7 +1037,6 @@
             bgX.fillStyle = lvl.bg;
             bgX.fillRect(0,0,w,h);
 
-            // Nebula clouds
             if(lvl.hasNebula) {
                 nebulaParticles.forEach(np => {
                     np.x += np.vx; np.y += np.vy;
@@ -894,7 +1053,6 @@
                 });
             }
 
-            // Stars
             const starLimit = lvl.starCount;
             for(let i=0; i<Math.min(stars.length, starLimit); i++) {
                 const s = stars[i];
@@ -902,24 +1060,17 @@
                 const alpha = 0.3 + Math.sin(s.twinkle)*0.3;
                 bgX.fillStyle = `rgba(255,255,255,${alpha})`;
                 bgX.beginPath(); bgX.arc(s.x, s.y, s.size, 0, Math.PI*2); bgX.fill();
-
-                // Shooting stars occasionally
                 if(Math.random() > 0.9995) {
                     bgX.strokeStyle = `rgba(255,255,255,0.6)`;
                     bgX.lineWidth = 1;
-                    bgX.beginPath();
-                    bgX.moveTo(s.x, s.y);
-                    bgX.lineTo(s.x - 30, s.y + 10);
-                    bgX.stroke();
+                    bgX.beginPath(); bgX.moveTo(s.x, s.y); bgX.lineTo(s.x - 30, s.y + 10); bgX.stroke();
                 }
             }
 
-            // Buildings (cyberpunk silhouette)
             if(lvl.hasBuildings) {
                 bgX.fillStyle = 'rgba(0,0,0,0.4)';
                 buildings.forEach(b => {
                     bgX.fillRect(b.x, h - b.h - 20, b.w, b.h);
-                    // Windows
                     if(b.windows && frames % 60 < 30) {
                         bgX.fillStyle = `rgba(${lvl.accent === '#FF00CC' ? '255,0,200' : '255,200,0'},0.15)`;
                         for(let wy = h-b.h; wy < h-30; wy += 15) {
@@ -932,17 +1083,13 @@
                 });
             }
 
-            // Grid floor (perspective)
             if(lvl.hasGridFloor) {
                 bgX.strokeStyle = lvl.grid;
-                bgX.lineWidth = 1;
-                bgX.globalAlpha = 0.5;
-                // Horizontal lines (perspective)
+                bgX.lineWidth = 1; bgX.globalAlpha = 0.5;
                 for(let i=0; i<10; i++) {
                     const y = h - 20 - i*i*3;
                     bgX.beginPath(); bgX.moveTo(0, y); bgX.lineTo(w, y); bgX.stroke();
                 }
-                // Vertical lines converging
                 for(let i=-10; i<=10; i++) {
                     const x = w/2 + i * 60;
                     bgX.beginPath(); bgX.moveTo(w/2, h-100); bgX.lineTo(x, h-20); bgX.stroke();
@@ -950,7 +1097,6 @@
                 bgX.globalAlpha = 1;
             }
 
-            // Rings (Saturn-style, for space levels)
             if(lvl.hasRings) {
                 bgX.save();
                 bgX.translate(w/2, h*0.3);
@@ -958,348 +1104,157 @@
                 bgX.strokeStyle = `rgba(255,255,255,0.06)`;
                 bgX.lineWidth = 2;
                 for(let r=80; r<300; r+=25) {
-                    bgX.beginPath();
-                    bgX.ellipse(0, 0, r, r*0.15, 0, 0, Math.PI*2);
-                    bgX.stroke();
+                    bgX.beginPath(); bgX.ellipse(0, 0, r, r*0.15, 0, 0, Math.PI*2); bgX.stroke();
                 }
                 bgX.restore();
             }
 
-            // Grid overlay
-            bgX.strokeStyle = lvl.grid;
-            bgX.lineWidth = 0.5;
+            bgX.strokeStyle = lvl.grid; bgX.lineWidth = 0.5;
             for(let x=0; x<w; x+=lvl.gridSize) { bgX.beginPath(); bgX.moveTo(x,0); bgX.lineTo(x,h); bgX.stroke(); }
             for(let y=0; y<h; y+=lvl.gridSize) { bgX.beginPath(); bgX.moveTo(0,y); bgX.lineTo(w,y); bgX.stroke(); }
 
-            // Candlestick chart
             const cw = w / chartData.length;
             let prevY = h - (chartData[0]/100)*h*0.55 + h*0.12;
-
             for(let i=1; i<chartData.length; i++) {
                 const val = chartData[i], prev = chartData[i-1];
                 const x = i*cw;
                 const y = h - (val/100)*h*0.55 + h*0.12;
                 const up = val >= prev;
-
                 bgX.strokeStyle = up ? lvl.chartUp : lvl.chartDown;
                 bgX.globalAlpha = 0.2;
                 bgX.beginPath(); bgX.moveTo((i-1)*cw, prevY); bgX.lineTo(x, y); bgX.stroke();
-
                 bgX.fillStyle = up ? lvl.chartUp : lvl.chartDown;
                 bgX.shadowColor = up ? lvl.glowUp : lvl.glowDown;
                 bgX.shadowBlur = 8;
                 const ch = Math.abs(y-prevY)+2, cy = Math.min(y,prevY);
                 bgX.fillRect(x-cw/2+1, cy, Math.max(2,cw-1), Math.max(2,ch));
-                bgX.shadowBlur = 0;
-                bgX.globalAlpha = 1;
-
+                bgX.shadowBlur = 0; bgX.globalAlpha = 1;
                 prevY = y;
             }
 
-            // Floor line
-            bgX.strokeStyle = 'rgba(255,50,50,0.35)';
-            bgX.lineWidth = 2;
-            bgX.setLineDash([6,6]);
-            bgX.beginPath(); bgX.moveTo(0,h-18); bgX.lineTo(w,h-18); bgX.stroke();
-            bgX.setLineDash([]);
-
-            bgX.fillStyle = 'rgba(255,50,50,0.4)';
-            bgX.font = '9px monospace';
+            bgX.strokeStyle = 'rgba(255,50,50,0.35)'; bgX.lineWidth = 2;
+            bgX.setLineDash([6,6]); bgX.beginPath(); bgX.moveTo(0,h-18); bgX.lineTo(w,h-18); bgX.stroke(); bgX.setLineDash([]);
+            bgX.fillStyle = 'rgba(255,50,50,0.4)'; bgX.font = '9px monospace';
             bgX.fillText('SUPPORT LEVEL — BREAK IT AND DIE', 12, h-26);
 
             requestAnimationFrame(drawBg);
         }
 
         // ============================================
-        // THE BULL — Redesigned to look unmistakably bullish
+        // PIXELATED NFT BEAR
         // ============================================
-        function drawBull(x, y, ang, wob) {
+        function drawBear(b) {
             gX.save();
-            gX.translate(x, y);
-
-            // Face the movement direction
-            const fa = Math.atan2(Math.sin(ang), Math.cos(ang));
-            gX.rotate(fa + Math.PI/2);
-
-            const sc = 1 + Math.sin(wob)*0.025;
-            gX.scale(sc, sc);
-
-            // Shadow
-            gX.fillStyle = 'rgba(0,0,0,0.3)';
-            gX.beginPath();
-            gX.ellipse(0, 42, 32, 16, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // === LEGS — Thick, muscular, bull-like stance ===
-            gX.strokeStyle = '#7C2D12'; // Darker brown
-            gX.lineWidth = 9;
-            gX.lineCap = 'round';
-
-            const runCycle = Math.sin(wob * 2.8) * 14;
-
-            // Back legs (power stance)
-            gX.beginPath(); gX.moveTo(-18, 18); gX.lineTo(-24 + runCycle, 46); gX.stroke();
-            gX.beginPath(); gX.moveTo(18, 18); gX.lineTo(24 - runCycle, 46); gX.stroke();
-
-            // Front legs (shorter, planted)
-            gX.beginPath(); gX.moveTo(-12, 14); gX.lineTo(-14 - runCycle*0.6, 40); gX.stroke();
-            gX.beginPath(); gX.moveTo(12, 14); gX.lineTo(14 + runCycle*0.6, 40); gX.stroke();
-
-            // Hooves
-            gX.fillStyle = '#1F1F1F';
-            gX.beginPath(); gX.ellipse(-24 + runCycle, 48, 5, 3, 0, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(24 - runCycle, 48, 5, 3, 0, 0, Math.PI*2); gX.fill();
-
-            // === BODY — Broad, heavy, bullish ===
-            // Main torso (wide shoulders, thick chest)
-            gX.fillStyle = '#C2410C'; // Orange-700, richer
-            gX.beginPath();
-            gX.ellipse(0, -2, 38, 46, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // Chest highlight (muscular definition)
-            gX.fillStyle = '#EA580C'; // Orange-600
-            gX.beginPath();
-            gX.ellipse(0, -8, 28, 32, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // Shoulder muscles
-            gX.fillStyle = '#9A3412'; // Orange-800
-            gX.beginPath(); gX.ellipse(-22, -5, 12, 18, -0.3, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(22, -5, 12, 18, 0.3, 0, Math.PI*2); gX.fill();
-
-            // === NECK — Thick, powerful, connects to big head ===
-            gX.fillStyle = '#C2410C';
-            gX.beginPath();
-            gX.moveTo(-18, -25);
-            gX.quadraticCurveTo(-22, -45, -14, -55);
-            gX.lineTo(14, -55);
-            gX.quadraticCurveTo(22, -45, 18, -25);
-            gX.fill();
-
-            // Neck muscle lines
-            gX.strokeStyle = '#9A3412';
-            gX.lineWidth = 2;
-            gX.beginPath(); gX.moveTo(-8, -30); gX.lineTo(-10, -50); gX.stroke();
-            gX.beginPath(); gX.moveTo(8, -30); gX.lineTo(10, -50); gX.stroke();
-
-            // === HEAD — Large, heavy, unmistakably bovine ===
-            gX.translate(0, -52);
-
-            // Jaw / lower face (wide, square)
-            gX.fillStyle = '#C2410C';
-            gX.beginPath();
-            gX.moveTo(-20, 5);
-            gX.quadraticCurveTo(-24, 20, -16, 28);
-            gX.lineTo(16, 28);
-            gX.quadraticCurveTo(24, 20, 20, 5);
-            gX.fill();
-
-            // Upper head / forehead (broad)
-            gX.fillStyle = '#EA580C';
-            gX.beginPath();
-            gX.ellipse(0, -5, 22, 20, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // Forehead ridge (brow bone)
-            gX.fillStyle = '#9A3412';
-            gX.beginPath();
-            gX.ellipse(0, -12, 18, 8, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // Ears — small, pointed back (angry bull)
-            gX.fillStyle = '#C2410C';
-            gX.beginPath();
-            gX.moveTo(-20, -8);
-            gX.quadraticCurveTo(-32, -14, -28, -22);
-            gX.quadraticCurveTo(-22, -18, -18, -12);
-            gX.fill();
-            gX.beginPath();
-            gX.moveTo(20, -8);
-            gX.quadraticCurveTo(32, -14, 28, -22);
-            gX.quadraticCurveTo(22, -18, 18, -12);
-            gX.fill();
-
-            // Inner ear
-            gX.fillStyle = '#FDBA74';
-            gX.beginPath(); gX.ellipse(-24, -16, 4, 6, -0.5, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(24, -16, 4, 6, 0.5, 0, Math.PI*2); gX.fill();
-
-            // Snout / nose area
-            gX.fillStyle = '#FDBA74'; // Light orange
-            gX.beginPath();
-            gX.ellipse(0, 18, 14, 10, 0, 0, Math.PI*2);
-            gX.fill();
-
-            // Nostrils
-            gX.fillStyle = '#1F1F1F';
-            gX.beginPath(); gX.ellipse(-6, 20, 3, 4, 0.2, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(6, 20, 3, 4, -0.2, 0, Math.PI*2); gX.fill();
-
-            // Nose ring (gold bull ring)
-            gX.strokeStyle = '#FFD700';
-            gX.lineWidth = 2.5;
-            gX.beginPath();
-            gX.arc(0, 24, 5, 0.2, Math.PI - 0.2);
-            gX.stroke();
-
-            // Ring highlight
-            gX.strokeStyle = '#FFED4A';
-            gX.lineWidth = 1;
-            gX.beginPath();
-            gX.arc(0, 24, 5, 0.5, 1.5);
-            gX.stroke();
-
-            // Mouth line (slight smirk)
-            gX.strokeStyle = '#7C2D12';
-            gX.lineWidth = 2;
-            gX.beginPath();
-            gX.moveTo(-8, 26);
-            gX.quadraticCurveTo(0, 30, 10, 25);
-            gX.stroke();
-
-            // === EYES — Intense, forward-facing, predator-like ===
-            // Eye sockets (deep set)
-            gX.fillStyle = '#7C2D12';
-            gX.beginPath(); gX.ellipse(-10, -2, 8, 9, -0.1, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(10, -2, 8, 9, 0.1, 0, Math.PI*2); gX.fill();
-
-            // Eyeballs
-            gX.fillStyle = '#FFF';
-            gX.beginPath(); gX.ellipse(-10, -2, 6, 7, -0.1, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(10, -2, 6, 7, 0.1, 0, Math.PI*2); gX.fill();
-
-            // Pupils (tracking movement slightly)
-            const lookX = Math.sin(wob * 0.5) * 1.5;
-            gX.fillStyle = '#000';
-            gX.beginPath(); gX.arc(-10 + lookX, -2, 3.5, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.arc(10 + lookX, -2, 3.5, 0, Math.PI*2); gX.fill();
-
-            // Eye shine
-            gX.fillStyle = '#FFF';
-            gX.beginPath(); gX.arc(-11.5 + lookX, -3.5, 1.2, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.arc(8.5 + lookX, -3.5, 1.2, 0, Math.PI*2); gX.fill();
-
-            // === EYEBROWS — Heavy, angry, bullish ===
-            gX.fillStyle = '#4A1D0B'; // Very dark brown
-            gX.beginPath();
-            gX.moveTo(-20, -10);
-            gX.quadraticCurveTo(-12, -16, -4, -12);
-            gX.lineTo(-4, -8);
-            gX.quadraticCurveTo(-12, -12, -20, -6);
-            gX.fill();
-            gX.beginPath();
-            gX.moveTo(20, -10);
-            gX.quadraticCurveTo(12, -16, 4, -12);
-            gX.lineTo(4, -8);
-            gX.quadraticCurveTo(12, -12, 20, -6);
-            gX.fill();
-
-            // === HORNS — The defining feature. Thick, curved, dangerous ===
-            // Horn base (thick)
-            gX.fillStyle = '#E5E5E5'; // Off-white bone
-            gX.beginPath(); gX.ellipse(-14, -22, 8, 6, -0.4, 0, Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(14, -22, 8, 6, 0.4, 0, Math.PI*2); gX.fill();
-
-            // Main horn curve
-            gX.strokeStyle = '#E5E5E5';
-            gX.lineWidth = 7;
-            gX.lineCap = 'round';
-            gX.beginPath();
-            gX.moveTo(-16, -24);
-            gX.bezierCurveTo(-35, -45, -45, -65, -30, -80);
-            gX.stroke();
-
-            gX.beginPath();
-            gX.moveTo(16, -24);
-            gX.bezierCurveTo(35, -45, 45, -65, 30, -80);
-            gX.stroke();
-
-            // Horn shadow/darker side
-            gX.strokeStyle = '#B8B8B8';
-            gX.lineWidth = 3;
-            gX.beginPath();
-            gX.moveTo(-16, -24);
-            gX.bezierCurveTo(-32, -42, -40, -60, -28, -75);
-            gX.stroke();
-
-            gX.beginPath();
-            gX.moveTo(16, -24);
-            gX.bezierCurveTo(32, -42, 40, -60, 28, -75);
-            gX.stroke();
-
-            // Horn tips (sharp)
-            gX.fillStyle = '#D4D4D4';
-            gX.beginPath();
-            gX.moveTo(-30, -80);
-            gX.lineTo(-26, -88);
-            gX.lineTo(-22, -78);
-            gX.fill();
-
-            gX.beginPath();
-            gX.moveTo(30, -80);
-            gX.lineTo(26, -88);
-            gX.lineTo(22, -78);
-            gX.fill();
-
-            // Horn rings (texture)
-            gX.strokeStyle = '#B8B8B8';
-            gX.lineWidth = 1.5;
-            for(let i=0; i<4; i++) {
-                const t = i/4;
-                const hx1 = -16 + (-30+16)*t + Math.sin(t*Math.PI)*-5;
-                const hy1 = -24 + (-80+24)*t;
-                gX.beginPath(); gX.arc(hx1, hy1, 4-t, 0, Math.PI*2); gX.stroke();
-
-                const hx2 = 16 + (30-16)*t - Math.sin(t*Math.PI)*-5;
-                const hy2 = -24 + (-80+24)*t;
-                gX.beginPath(); gX.arc(hx2, hy2, 4-t, 0, Math.PI*2); gX.stroke();
+            gX.translate(b.x, b.y);
+            
+            // Portal effect during spawn
+            if(b.portalPhase < 1) {
+                gX.globalAlpha = b.portalPhase;
+                const portalScale = 1 + (1-b.portalPhase)*2;
+                gX.scale(portalScale, portalScale);
+                
+                // Swirl
+                for(let i=0; i<3; i++) {
+                    gX.strokeStyle = `hsla(${280 + i*20}, 80%, 60%, ${0.3 * (1-b.portalPhase)})`;
+                    gX.lineWidth = 2;
+                    gX.beginPath();
+                    gX.arc(0, 0, 20 + i*10 + b.portalPhase*30, 0, Math.PI*2);
+                    gX.stroke();
+                }
             }
 
-            // === LASER EYES (10x+ combo) ===
-            if(combo >= 10) {
-                const laserIntensity = Math.min((combo - 10) / 20, 1);
-                gX.save();
-                gX.globalAlpha = 0.6 + Math.sin(frames * 0.3) * 0.3;
+            const pixelSize = 4; // Blocky pixel scale
+            gX.scale(pixelSize, pixelSize);
+            
+            // Bear body — chunky pixel blocks
+            gX.fillStyle = '#5D4037'; // Brown
+            
+            // Main body block
+            gX.fillRect(-5, -2, 10, 8);
+            // Head block
+            gX.fillRect(-4, -8, 8, 6);
+            // Ears
+            gX.fillRect(-5, -10, 3, 3);
+            gX.fillRect(2, -10, 3, 3);
+            // Snout
+            gX.fillStyle = '#8D6E63';
+            gX.fillRect(-2, -5, 4, 3);
+            // Nose
+            gX.fillStyle = '#1F1F1F';
+            gX.fillRect(-1, -6, 2, 2);
+            // Eyes (angry red)
+            gX.fillStyle = '#FF4444';
+            gX.fillRect(-3, -7, 2, 2);
+            gX.fillRect(1, -7, 2, 2);
+            // Eye shine
+            gX.fillStyle = '#FFFFFF';
+            gX.fillRect(-2, -7, 1, 1);
+            gX.fillRect(2, -7, 1, 1);
+            
+            // Legs
+            gX.fillStyle = '#5D4037';
+            gX.fillRect(-4, 6, 3, 4);
+            gX.fillRect(1, 6, 3, 4);
+            
+            // Arms (reaching)
+            gX.fillStyle = '#4E342E';
+            const armWave = Math.sin(b.wob) * 2;
+            gX.fillRect(-7 + armWave, -1, 3, 5);
+            gX.fillRect(4 - armWave, -1, 3, 5);
+            
+            // "BEAR" text pixel badge
+            gX.fillStyle = '#FF0000';
+            gX.fillRect(-3, 2, 6, 2);
+            gX.fillStyle = '#FFFFFF';
+            gX.fillRect(-2, 2.5, 1, 1); gX.fillRect(0, 2.5, 1, 1); gX.fillRect(2, 2.5, 1, 1);
 
-                // Glow
-                gX.shadowColor = '#FF0000';
-                gX.shadowBlur = 25;
-
-                // Left laser
-                gX.strokeStyle = '#FF0000';
-                gX.lineWidth = 4;
-                gX.beginPath(); gX.moveTo(-10, -2); gX.lineTo(-10, -120); gX.stroke();
-
-                // Core
-                gX.strokeStyle = '#FFFFFF';
-                gX.lineWidth = 2;
-                gX.beginPath(); gX.moveTo(-10, -2); gX.lineTo(-10, -120); gX.stroke();
-
-                // Right laser
-                gX.strokeStyle = '#FF0000';
-                gX.lineWidth = 4;
-                gX.beginPath(); gX.moveTo(10, -2); gX.lineTo(10, -120); gX.stroke();
-
-                gX.strokeStyle = '#FFFFFF';
-                gX.lineWidth = 2;
-                gX.beginPath(); gX.moveTo(10, -2); gX.lineTo(10, -120); gX.stroke();
-
-                gX.shadowBlur = 0;
-                gX.restore();
+            // Glitch effect for time-travel feel
+            if(Math.random() > 0.95) {
+                gX.fillStyle = 'rgba(255,0,255,0.3)';
+                gX.fillRect(-6 + Math.random()*4, -10 + Math.random()*8, 3, 2);
             }
 
             gX.restore();
         }
 
-        function loop() {
-            update();
-            draw();
-            requestAnimationFrame(loop);
-        }
+        // ============================================
+        // PIXELATED NFT BULL — Swimming breaststroke legs
+        // ============================================
+        function drawBull(x, y, ang, wob) {
+            gX.save();
+            gX.translate(x, y);
+            
+            // Face movement direction
+            const fa = Math.atan2(Math.sin(ang), Math.cos(ang));
+            gX.rotate(fa + Math.PI/2);
+            
+            // Dash blur effect
+            if(bull.isDashing) {
+                gX.globalAlpha = 0.3;
+                gX.drawImage(gC, -bull.r*2, -bull.r*2, bull.r*4, bull.r*4);
+                gX.globalAlpha = 1;
+            }
 
-        init();
+            const ps = 5; // Pixel size — chunky NFT style
+            gX.scale(ps, ps);
+            
+            // Disable anti-aliasing for pixel look
+            gX.imageSmoothingEnabled = false;
 
-    </script>
-</body>
-</html>
+            // === SWIMMING LEGS — Breaststroke kick ===
+            // Legs splay OUT then tuck IN in swimming motion
+            const kickCycle = Math.sin(wob * 2) * 3; // -3 to 3
+            
+            // Left leg (splays outward on kick)
+            gX.fillStyle = '#B45309'; // Dark orange
+            const leftLegX = -4 + kickCycle;
+            const leftLegY = 5 + Math.abs(kickCycle) * 0.5;
+            gX.fillRect(leftLegX - 1, leftLegY, 3, 5);
+            // Foot — splays wider
+            gX.fillRect(leftLegX - 2 + kickCycle*0.5, leftLegY + 5, 4, 2);
+            
+            // Right leg (mirrored)
+            const rightLegX = 2 - kickCycle;
+            const rightLegY = 5 + Math.abs(kickCycle) * 0.5;
+            gX.fillRect(rightLegX - 1, rightLegY, 3, 5);
+            gX.fillRect(rightLegX - 2 -
