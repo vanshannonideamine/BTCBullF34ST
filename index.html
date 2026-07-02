@@ -11,18 +11,17 @@
         body {
             overflow: hidden;
             touch-action: none;
-            background: #0a0a0f;
+            background: #000;
             font-family: 'Fredoka One', cursive;
         }
         canvas { display: block; }
         
-        /* Retro CRT overlay */
         .scanlines {
             position: fixed;
             inset: 0;
             pointer-events: none;
             z-index: 100;
-            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.12) 0px, transparent 1px, transparent 2px);
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, transparent 1px, transparent 2px);
             background-size: 100% 3px;
         }
         .vignette {
@@ -30,10 +29,9 @@
             inset: 0;
             pointer-events: none;
             z-index: 101;
-            background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.4) 100%);
+            background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.5) 100%);
         }
         
-        /* UI */
         .ui-layer {
             position: fixed;
             inset: 0;
@@ -47,55 +45,52 @@
         .interactive { pointer-events: auto; }
         
         .glass {
-            background: rgba(10, 10, 20, 0.85);
-            border: 2px solid rgba(255, 215, 0, 0.25);
-            border-radius: 16px;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(6px);
         }
         
         .retro { font-family: 'Press Start 2P', cursive; }
         
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-12px); }
+            50% { transform: translateY(-10px); }
         }
         .float { animation: float 3s ease-in-out infinite; }
         
         @keyframes popIn {
-            0% { transform: scale(0) rotate(-8deg); opacity: 0; }
-            80% { transform: scale(1.05) rotate(2deg); opacity: 1; }
+            0% { transform: scale(0) rotate(-6deg); opacity: 0; }
+            80% { transform: scale(1.04) rotate(1deg); opacity: 1; }
             100% { transform: scale(1) rotate(0); opacity: 1; }
         }
         .pop { animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         
         @keyframes pulseGlow {
-            0%, 100% { box-shadow: 0 0 15px rgba(255,215,0,0.2); }
-            50% { box-shadow: 0 0 35px rgba(255,215,0,0.5); }
+            0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.15); }
+            50% { box-shadow: 0 0 28px rgba(255,215,0,0.4); }
         }
-        .glow { animation: pulseGlow 2s ease-in-out infinite; }
+        .glow { animation: pulseGlow 2.5s ease-in-out infinite; }
         
         .hidden { display: none !important; }
         
-        /* Speech bubble */
         .bubble {
             position: relative;
             background: #fff;
-            border-radius: 20px;
-            padding: 20px;
-            max-width: 340px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+            border-radius: 18px;
+            padding: 18px;
+            max-width: 360px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .bubble::after {
             content: '';
             position: absolute;
-            bottom: -14px;
-            left: 40px;
-            border: 14px solid transparent;
+            bottom: -12px;
+            left: 36px;
+            border: 12px solid transparent;
             border-top-color: #fff;
         }
         
-        /* Difficulty buttons */
         .diff-btn {
             transition: all 0.2s;
             cursor: pointer;
@@ -104,89 +99,81 @@
         .diff-btn:hover { transform: scale(1.05); }
         .diff-btn.active {
             border-color: #F59E0B;
-            background: rgba(245, 158, 11, 0.15);
+            background: rgba(245, 158, 11, 0.12);
         }
         
-        /* Scrollbar for leaderboard */
-        .lb-scroll::-webkit-scrollbar { width: 6px; }
+        .lb-scroll::-webkit-scrollbar { width: 5px; }
         .lb-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-        .lb-scroll::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.3); border-radius: 3px; }
+        .lb-scroll::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.25); border-radius: 3px; }
     </style>
 </head>
 <body>
 
-    <!-- CRT Effects -->
     <div class="scanlines"></div>
     <div class="vignette"></div>
 
-    <!-- Background Canvas (Retro Chart) -->
     <canvas id="bgCanvas" style="position:fixed; top:0; left:0; z-index:0;"></canvas>
-    
-    <!-- Game Canvas -->
     <canvas id="gameCanvas" style="position:fixed; top:0; left:0; z-index:10;"></canvas>
 
-    <!-- UI Layer -->
     <div class="ui-layer">
-        
-        <!-- Top HUD -->
         <div class="flex justify-between items-start w-full">
-            <div class="glass px-5 py-3 glow flex items-center gap-3">
-                <span class="text-2xl">₿</span>
+            <div class="glass px-4 py-2 glow flex items-center gap-3">
+                <span class="text-xl">₿</span>
                 <div>
-                    <div class="text-gray-400 text-[10px] uppercase tracking-widest retro">Sats</div>
-                    <div class="text-3xl text-yellow-400" id="scoreDisplay">0</div>
+                    <div class="text-gray-500 text-[9px] uppercase tracking-widest retro">Sats</div>
+                    <div class="text-2xl text-yellow-400" id="scoreDisplay">0</div>
                 </div>
             </div>
-            
             <div class="flex gap-2">
-                <div class="glass px-4 py-2 text-center">
-                    <div class="text-gray-400 text-[8px] uppercase retro">Level</div>
-                    <div class="text-xl text-green-400" id="levelDisplay">1</div>
+                <div class="glass px-3 py-2 text-center">
+                    <div class="text-gray-500 text-[8px] uppercase retro">Year</div>
+                    <div class="text-lg text-cyan-400" id="yearDisplay">2025</div>
                 </div>
-                <div class="glass px-4 py-2 flex items-center gap-1" id="livesPanel">
-                    <span class="text-red-500">❤</span>
-                    <span class="text-white font-bold" id="livesDisplay">3</span>
+                <div class="glass px-3 py-2 text-center">
+                    <div class="text-gray-500 text-[8px] uppercase retro">Lvl</div>
+                    <div class="text-lg text-green-400" id="levelDisplay">1</div>
+                </div>
+                <div class="glass px-3 py-2 flex items-center gap-1">
+                    <span class="text-red-500 text-sm">❤</span>
+                    <span class="text-white font-bold text-sm" id="livesDisplay">3</span>
                 </div>
             </div>
         </div>
 
-        <!-- Center Notifications -->
         <div id="notifArea" class="absolute top-1/4 left-1/2 -translate-x-1/2 pointer-events-none"></div>
 
         <!-- START SCREEN -->
-        <div id="startScreen" class="absolute inset-0 flex items-center justify-center bg-black/70 interactive z-50">
-            <div class="glass p-8 text-center max-w-lg w-full mx-4 pop border-yellow-500/30">
-                <div class="text-7xl mb-3 float">🐂</div>
+        <div id="startScreen" class="absolute inset-0 flex items-center justify-center bg-black/75 interactive z-50">
+            <div class="glass p-8 text-center max-w-lg w-full mx-4 pop border-yellow-500/20">
+                <div class="text-6xl mb-2 float">🐂</div>
                 <h1 class="text-4xl md:text-5xl text-yellow-400 mb-1 tracking-wide">BTC BULL RUN</h1>
-                <p class="text-gray-400 text-xs retro tracking-wider mb-6">CATCH THE FALLING SATS</p>
+                <p class="text-gray-500 text-[10px] retro tracking-wider mb-6">CATCH SATS ACROSS TIME</p>
 
-                <!-- Difficulty -->
                 <div class="mb-6">
-                    <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-3 retro">Difficulty</p>
+                    <p class="text-gray-500 text-[9px] uppercase tracking-widest mb-3 retro">Difficulty</p>
                     <div class="flex gap-3 justify-center">
                         <button class="diff-btn active glass px-4 py-3 rounded-xl text-xs font-bold text-green-400" data-diff="easy" onclick="setDiff('easy')">
                             <div class="text-lg mb-1">🌱</div>
                             <div>EASY</div>
-                            <div class="text-[9px] text-gray-500 font-normal mt-1">3 Lives<br>Slow</div>
+                            <div class="text-[9px] text-gray-500 font-normal mt-1">3 Lives</div>
                         </button>
                         <button class="diff-btn glass px-4 py-3 rounded-xl text-xs font-bold text-yellow-400" data-diff="normal" onclick="setDiff('normal')">
                             <div class="text-lg mb-1">⚡</div>
                             <div>NORMAL</div>
-                            <div class="text-[9px] text-gray-500 font-normal mt-1">2 Lives<br>Standard</div>
+                            <div class="text-[9px] text-gray-500 font-normal mt-1">2 Lives</div>
                         </button>
                         <button class="diff-btn glass px-4 py-3 rounded-xl text-xs font-bold text-red-400" data-diff="hard" onclick="setDiff('hard')">
                             <div class="text-lg mb-1">🔥</div>
                             <div>HARD</div>
-                            <div class="text-[9px] text-gray-500 font-normal mt-1">1 Life<br>Fast</div>
+                            <div class="text-[9px] text-gray-500 font-normal mt-1">1 Life</div>
                         </button>
                     </div>
                 </div>
 
-                <button id="startBtn" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-black font-bold py-4 rounded-xl text-lg shadow-lg transition hover:scale-105 active:scale-95 retro text-xs">
+                <button id="startBtn" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-black font-bold py-4 rounded-xl text-lg shadow-lg transition hover:scale-105 active:scale-95 retro text-[10px]">
                     START RUN ▶
                 </button>
-                
-                <div class="mt-4 flex justify-center gap-4 text-[10px] text-gray-500">
+                <div class="mt-3 flex justify-center gap-4 text-[10px] text-gray-500">
                     <span>🖱️ Mouse</span>
                     <span>👆 Touch</span>
                     <span>⌨️ Arrows</span>
@@ -194,61 +181,59 @@
             </div>
         </div>
 
-        <!-- TUTORIAL SCREEN -->
+        <!-- TUTORIAL -->
         <div id="tutorialScreen" class="hidden absolute inset-0 flex items-center justify-center bg-black/50 interactive z-40">
             <div class="flex flex-col items-center gap-4 p-4 max-w-md w-full">
-                <div class="text-8xl float" style="filter:drop-shadow(0 10px 20px rgba(0,0,0,0.5))">🐻</div>
+                <div class="text-7xl float" style="filter:drop-shadow(0 10px 20px rgba(0,0,0,0.5))">🐻</div>
                 <div class="bubble text-left">
-                    <h3 class="font-bold text-gray-800 text-lg mb-2">Hey there, Bull!</h3>
+                    <h3 class="font-bold text-gray-800 text-lg mb-2">Listen up, Bull.</h3>
                     <p class="text-gray-600 text-sm mb-3 leading-relaxed">
-                        I'm <strong>Bear Market</strong>. Here's the deal:
+                        I'm Bear Market. Here's how this works:
                     </p>
                     <ul class="text-sm text-gray-700 space-y-2 mb-3">
-                        <li class="flex gap-2"><span class="text-yellow-500 text-lg">₿</span> <span><strong>Catch gold Bitcoins</strong> falling from the sky</span></li>
-                        <li class="flex gap-2"><span class="text-red-500 text-lg">📉</span> <span>Don't let coins hit the <strong>bottom</strong> — chart crashes!</span></li>
-                        <li class="flex gap-2"><span class="text-green-500 text-lg">🚀</span> <span><strong>Combo streaks</strong> = bonus sats</span></li>
-                        <li class="flex gap-2"><span class="text-purple-500 text-lg">⭐</span> <span>Every <strong>500 sats</strong> = new level, new theme</span></li>
+                        <li class="flex gap-2"><span class="text-yellow-500">₿</span> <span>Catch falling Bitcoins</span></li>
+                        <li class="flex gap-2"><span class="text-red-500">📉</span> <span>Miss one = chart crash, lose a life</span></li>
+                        <li class="flex gap-2"><span class="text-green-500">🚀</span> <span>Combos multiply your score</span></li>
+                        <li class="flex gap-2"><span class="text-purple-500">🕐</span> <span>Every level advances the year. The future gets weird.</span></li>
                     </ul>
-                    <p class="text-xs text-gray-500 italic">"Don't let the bears win... this time!"</p>
+                    <p class="text-xs text-gray-500 italic">"2027 is coming. You won't believe the charts."</p>
                 </div>
                 <button id="tutBtn" class="bg-gray-800 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition hover:scale-105">
-                    Got it, let's run! 🐂
+                    Let's run 🐂
                 </button>
             </div>
         </div>
 
-        <!-- GAME OVER SCREEN -->
-        <div id="gameOverScreen" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 interactive z-50">
-            <div class="glass p-6 text-center max-w-md w-full mx-4 pop border-red-500/30">
-                <div class="text-6xl mb-2">📉</div>
+        <!-- GAME OVER -->
+        <div id="gameOverScreen" class="hidden absolute inset-0 flex items-center justify-center bg-black/85 interactive z-50">
+            <div class="glass p-6 text-center max-w-md w-full mx-4 pop border-red-500/20">
+                <div class="text-5xl mb-2">📉</div>
                 <h2 class="text-3xl text-red-400 mb-1">MARKET CRASH!</h2>
-                <p class="text-gray-400 text-[10px] mb-4 retro">THE BEARS WON</p>
+                <p class="text-gray-500 text-[9px] mb-4 retro">THE BEARS WON</p>
 
-                <div class="bg-black/30 rounded-xl p-4 mb-4 border border-yellow-500/20">
-                    <div class="text-gray-400 text-[10px] uppercase tracking-widest mb-1 retro">Final Sats</div>
-                    <div class="text-5xl text-yellow-400" id="finalScore">0</div>
-                    <div class="text-sm text-gray-500 mt-1" id="comboDisplay">Best Combo: 0x</div>
-                    <div class="text-sm text-purple-400 mt-1" id="levelReached">Level Reached: 1</div>
+                <div class="bg-black/30 rounded-xl p-4 mb-4 border border-yellow-500/15">
+                    <div class="text-gray-500 text-[9px] uppercase tracking-widest mb-1 retro">Final Sats</div>
+                    <div class="text-4xl text-yellow-400" id="finalScore">0</div>
+                    <div class="text-xs text-gray-500 mt-1" id="yearReached">Year: 2025</div>
+                    <div class="text-xs text-gray-500" id="comboDisplay">Best Combo: 0x</div>
                 </div>
 
-                <!-- Name Entry -->
                 <div class="mb-4">
                     <input type="text" id="playerName" placeholder="Your name" maxlength="12" 
-                        class="w-full bg-black/40 border border-gray-600 rounded-lg px-4 py-2 text-white text-center focus:border-yellow-500 focus:outline-none retro text-xs"
+                        class="w-full bg-black/40 border border-gray-700 rounded-lg px-4 py-2 text-white text-center focus:border-yellow-500 focus:outline-none retro text-[10px]"
                         value="BullRunner">
                 </div>
 
-                <!-- Local Leaderboard -->
-                <div class="bg-black/20 rounded-xl p-3 mb-4 max-h-36 overflow-y-auto lb-scroll text-left">
-                    <div class="text-gray-400 text-[10px] uppercase tracking-widest mb-2 retro text-center">🏆 Local Hall of Fame</div>
+                <div class="bg-black/20 rounded-xl p-3 mb-4 max-h-32 overflow-y-auto lb-scroll text-left">
+                    <div class="text-gray-500 text-[9px] uppercase tracking-widest mb-2 retro text-center">🏆 Hall of Fame</div>
                     <div id="lbList" class="space-y-1 text-xs"></div>
                 </div>
 
                 <div class="flex gap-3">
-                    <button id="shareBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition hover:scale-105 text-sm">
+                    <button id="shareBtn" class="flex-1 bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition hover:scale-105 text-sm">
                         Share 📤
                     </button>
-                    <button id="restartBtn" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold py-3 rounded-xl transition hover:scale-105 retro text-xs">
+                    <button id="restartBtn" class="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 text-white font-bold py-3 rounded-xl transition hover:scale-95 retro text-[10px]">
                         RUN AGAIN ▶
                     </button>
                 </div>
@@ -258,34 +243,227 @@
 
     <script>
         // ============================================
-        // BTC BULL RUN - ZERO-DEPENDENCY GAME
-        // Single file, no APIs, no signups
+        // BTC BULL RUN — TIME TRAVEL EDITION
+        // Single file, zero dependencies, zero signups
         // ============================================
 
-        // --- CONFIG ---
         const DIFFICULTY = {
-            easy:   { lives: 3, spawnRate: 70,  speedMin: 1.2, speedMax: 2.8, hitBonus: 12 },
-            normal: { lives: 2, spawnRate: 55,  speedMin: 2.0, speedMax: 4.0, hitBonus: 6 },
-            hard:   { lives: 1, spawnRate: 40,  speedMin: 3.0, speedMax: 5.5, hitBonus: 0 }
+            easy:   { lives: 3, spawnRate: 75, speedMin: 1.0, speedMax: 2.5, hitBonus: 14 },
+            normal: { lives: 2, spawnRate: 58, speedMin: 1.8, speedMax: 3.6, hitBonus: 8 },
+            hard:   { lives: 1, spawnRate: 42, speedMin: 2.8, speedMax: 5.0, hitBonus: 2 }
         };
 
-        // 5 Levels with unique visual themes
+        // YEAR-BASED LEVELS — each level = one year forward
+        // Backgrounds evolve from present trading desk to far-future sci-fi
         const LEVELS = [
-            { name: "Genesis",    bg: "#0a0a0f", grid: "rgba(0,255,100,0.06)",  chartUp: "#00FF66", chartDown: "#FF3333", coinRate: 1.0 },
-            { name: "Bull Run",   bg: "#0f0a05", grid: "rgba(255,200,0,0.06)",  chartUp: "#FFD700", chartDown: "#FF6600", coinRate: 1.1 },
-            { name: "Moon",       bg: "#050a15", grid: "rgba(100,200,255,0.06)", chartUp: "#66CCFF", chartDown: "#CC66FF", coinRate: 1.2 },
-            { name: "Whale Zone", bg: "#0a0f0a", grid: "rgba(0,255,150,0.06)",  chartUp: "#00FF99", chartDown: "#FF0066", coinRate: 1.3 },
-            { name: "Satoshi's",  bg: "#150a0f", grid: "rgba(255,100,200,0.06)", chartUp: "#FF66CC", chartDown: "#66FFFF", coinRate: 1.4 }
+            {   // Level 1 — 2025: Present day trading desk
+                year: 2025,
+                name: "The Desk",
+                bg: "#0c0c14",
+                grid: "rgba(0,200,100,0.05)",
+                gridSize: 50,
+                chartUp: "#00CC66",
+                chartDown: "#CC3333",
+                glowUp: "rgba(0,200,100,0.15)",
+                glowDown: "rgba(200,50,50,0.15)",
+                accent: "#00CC66",
+                coinRate: 1.0,
+                starCount: 0,
+                hasBuildings: false,
+                hasRings: false,
+                hasNebula: false,
+                hasGridFloor: false,
+                scanlineIntensity: 0.12,
+                description: "Just another Tuesday at the trading desk."
+            },
+            {   // Level 2 — 2026: Early sci-fi, holographic displays
+                year: 2026,
+                name: "Holo Terminal",
+                bg: "#080a18",
+                grid: "rgba(0,220,255,0.06)",
+                gridSize: 40,
+                chartUp: "#00DDFF",
+                chartDown: "#FF3366",
+                glowUp: "rgba(0,220,255,0.2)",
+                glowDown: "rgba(255,50,100,0.2)",
+                accent: "#00DDFF",
+                coinRate: 1.08,
+                starCount: 30,
+                hasBuildings: false,
+                hasRings: true,
+                hasNebula: false,
+                hasGridFloor: true,
+                scanlineIntensity: 0.1,
+                description: "Holographic charts. Still losing money."
+            },
+            {   // Level 3 — 2027: Cyberpunk city, neon rain
+                year: 2027,
+                name: "Neo Tokyo",
+                bg: "#0a0014",
+                grid: "rgba(255,0,200,0.05)",
+                gridSize: 35,
+                chartUp: "#FF00CC",
+                chartDown: "#00FF99",
+                glowUp: "rgba(255,0,200,0.25)",
+                glowDown: "rgba(0,255,150,0.25)",
+                accent: "#FF00CC",
+                coinRate: 1.15,
+                starCount: 60,
+                hasBuildings: true,
+                hasRings: true,
+                hasNebula: false,
+                hasGridFloor: true,
+                scanlineIntensity: 0.08,
+                description: "Neon rain. Cyber-bulls. Same volatility."
+            },
+            {   // Level 4 — 2028: Orbital station, Earth below
+                year: 2028,
+                name: "Orbit Station",
+                bg: "#000510",
+                grid: "rgba(100,200,255,0.04)",
+                gridSize: 30,
+                chartUp: "#66CCFF",
+                chartDown: "#FF6644",
+                glowUp: "rgba(100,200,255,0.2)",
+                glowDown: "rgba(255,100,50,0.2)",
+                accent: "#66CCFF",
+                coinRate: 1.22,
+                starCount: 120,
+                hasBuildings: false,
+                hasRings: false,
+                hasNebula: true,
+                hasGridFloor: false,
+                scanlineIntensity: 0.06,
+                description: "Trading from orbit. Gravity is optional."
+            },
+            {   // Level 5 — 2029: Mars colony, red dust storms
+                year: 2029,
+                name: "Mars Base",
+                bg: "#140502",
+                grid: "rgba(255,100,50,0.05)",
+                gridSize: 45,
+                chartUp: "#FF8844",
+                chartDown: "#AA2222",
+                glowUp: "rgba(255,120,50,0.2)",
+                glowDown: "rgba(170,30,30,0.2)",
+                accent: "#FF8844",
+                coinRate: 1.28,
+                starCount: 80,
+                hasBuildings: true,
+                hasRings: false,
+                hasNebula: false,
+                hasGridFloor: true,
+                scanlineIntensity: 0.09,
+                description: "Red planet. Red candles. Some things don't change."
+            },
+            {   // Level 6 — 2030: Deep space, binary star system
+                year: 2030,
+                name: "Binary Stars",
+                bg: "#050008",
+                grid: "rgba(200,100,255,0.04)",
+                gridSize: 25,
+                chartUp: "#CC88FF",
+                chartDown: "#FF5588",
+                glowUp: "rgba(200,100,255,0.25)",
+                glowDown: "rgba(255,80,130,0.25)",
+                accent: "#CC88FF",
+                coinRate: 1.35,
+                starCount: 200,
+                hasBuildings: false,
+                hasRings: true,
+                hasNebula: true,
+                hasGridFloor: false,
+                scanlineIntensity: 0.05,
+                description: "Two suns. Infinite volatility."
+            },
+            {   // Level 7 — 2031: Dyson sphere interior
+                year: 2031,
+                name: "Dyson Shell",
+                bg: "#0a0a00",
+                grid: "rgba(255,220,0,0.05)",
+                gridSize: 20,
+                chartUp: "#FFDD00",
+                chartDown: "#FF4400",
+                glowUp: "rgba(255,220,0,0.3)",
+                glowDown: "rgba(255,60,0,0.3)",
+                accent: "#FFDD00",
+                coinRate: 1.42,
+                starCount: 50,
+                hasBuildings: false,
+                hasRings: true,
+                hasNebula: true,
+                hasGridFloor: true,
+                scanlineIntensity: 0.04,
+                description: "Harvesting a star's energy to mine harder."
+            },
+            {   // Level 8 — 2032: Wormhole transit, reality bending
+                year: 2032,
+                name: "The Rift",
+                bg: "#000000",
+                grid: "rgba(0,255,150,0.03)",
+                gridSize: 15,
+                chartUp: "#00FF99",
+                chartDown: "#FF0099",
+                glowUp: "rgba(0,255,150,0.35)",
+                glowDown: "rgba(255,0,150,0.35)",
+                accent: "#00FF99",
+                coinRate: 1.5,
+                starCount: 300,
+                hasBuildings: false,
+                hasRings: true,
+                hasNebula: true,
+                hasGridFloor: true,
+                scanlineIntensity: 0.03,
+                description: "Reality is optional. Sats are not."
+            },
+            {   // Level 9 — 2033: Post-singularity, pure data realm
+                year: 2033,
+                name: "Singularity",
+                bg: "#000",
+                grid: "rgba(255,255,255,0.02)",
+                gridSize: 10,
+                chartUp: "#FFFFFF",
+                chartDown: "#888888",
+                glowUp: "rgba(255,255,255,0.4)",
+                glowDown: "rgba(150,150,150,0.3)",
+                accent: "#FFFFFF",
+                coinRate: 1.6,
+                starCount: 500,
+                hasBuildings: false,
+                hasRings: true,
+                hasNebula: true,
+                hasGridFloor: true,
+                scanlineIntensity: 0.02,
+                description: "You are the chart now."
+            },
+            {   // Level 10 — 2034: The heat death, only Bitcoin remains
+                year: 2034,
+                name: "Heat Death",
+                bg: "#020205",
+                grid: "rgba(255,140,0,0.04)",
+                gridSize: 60,
+                chartUp: "#FF8800",
+                chartDown: "#FF2200",
+                glowUp: "rgba(255,140,0,0.4)",
+                glowDown: "rgba(255,30,0,0.3)",
+                accent: "#FF8800",
+                coinRate: 1.75,
+                starCount: 20,
+                hasBuildings: false,
+                hasRings: false,
+                hasNebula: false,
+                hasGridFloor: false,
+                scanlineIntensity: 0.15,
+                description: "At the end of time, there is only HODL."
+            }
         ];
 
-        // --- CANVAS SETUP ---
         const bgC = document.getElementById('bgCanvas');
         const bgX = bgC.getContext('2d');
         const gC = document.getElementById('gameCanvas');
         const gX = gC.getContext('2d');
 
-        // --- STATE ---
-        let state = 'MENU'; // MENU, TUTORIAL, PLAYING, GAMEOVER
+        let state = 'MENU';
         let diff = 'easy';
         let score = 0, level = 1, lives = 3, combo = 0, maxCombo = 0;
         let frames = 0, gameSpeed = 1;
@@ -293,18 +471,18 @@
         let mouseX = innerWidth/2, mouseY = innerHeight/2;
         let keys = {};
 
-        // Entities
-        let bull = { x:0, y:0, tx:0, ty:0, r:35, ang:0, wob:0, speed:0.12 };
+        let bull = { x:0, y:0, tx:0, ty:0, r:40, ang:0, wob:0, speed:0.11, charge:0 };
         let coins = [], particles = [], floatTexts = [];
+        let stars = [], buildings = [], nebulaParticles = [];
 
-        // Leaderboard (LocalStorage only, no server)
-        let leaderboard = JSON.parse(localStorage.getItem('btcBullLB')) || [
-            {name:"Satoshi", score:10000, level:5, diff:"hard"},
-            {name:"HODLer", score:6000, level:3, diff:"normal"},
-            {name:"MoonBoy", score:3000, level:2, diff:"easy"}
+        let leaderboard = JSON.parse(localStorage.getItem('btcBullLB_v2')) || [
+            {name:"Satoshi", score:25000, level:10, year:2034, diff:"hard"},
+            {name:"LaserEyes", score:15000, level:7, year:2031, diff:"hard"},
+            {name:"MoonBoy", score:8000, level:5, year:2029, diff:"normal"},
+            {name:"HODLer", score:4000, level:3, year:2027, diff:"easy"},
+            {name:"BearMarket", score:500, level:1, year:2025, diff:"easy"}
         ];
 
-        // --- INIT ---
         function init() {
             resize();
             addEventListener('resize', resize);
@@ -319,27 +497,73 @@
             document.getElementById('restartBtn').onclick = startGame;
             document.getElementById('shareBtn').onclick = shareScore;
 
-            // Init chart
-            for(let i=0; i<120; i++) chartData.push(40 + Math.random()*40);
+            for(let i=0; i<150; i++) chartData.push(35 + Math.random()*45);
+
+            generateStars();
+            generateBuildings();
+            generateNebula();
 
             requestAnimationFrame(loop);
-            drawBg(); // Background runs independently
+            drawBg();
+        }
+
+        function generateStars() {
+            stars = [];
+            for(let i=0; i<400; i++) {
+                stars.push({
+                    x: Math.random()*innerWidth,
+                    y: Math.random()*innerHeight,
+                    size: Math.random()*2 + 0.5,
+                    twinkle: Math.random()*Math.PI*2,
+                    speed: Math.random()*0.3 + 0.1
+                });
+            }
+        }
+
+        function generateBuildings() {
+            buildings = [];
+            const count = Math.floor(innerWidth / 60);
+            for(let i=0; i<count; i++) {
+                buildings.push({
+                    x: i * 60 + Math.random()*20,
+                    w: 30 + Math.random()*40,
+                    h: 80 + Math.random()*200,
+                    windows: Math.random() > 0.3
+                });
+            }
+        }
+
+        function generateNebula() {
+            nebulaParticles = [];
+            for(let i=0; i<30; i++) {
+                nebulaParticles.push({
+                    x: Math.random()*innerWidth,
+                    y: Math.random()*innerHeight,
+                    r: 50 + Math.random()*150,
+                    vx: (Math.random()-0.5)*0.3,
+                    vy: (Math.random()-0.5)*0.3,
+                    hue: Math.random()*360,
+                    alpha: 0.03 + Math.random()*0.04
+                });
+            }
         }
 
         function resize() {
             bgC.width = gC.width = innerWidth;
             bgC.height = gC.height = innerHeight;
-            if(state === 'MENU') { bull.x = bull.tx = innerWidth/2; bull.y = bull.ty = innerHeight/2; }
+            if(state === 'MENU') {
+                bull.x = bull.tx = innerWidth/2;
+                bull.y = bull.ty = innerHeight/2;
+            }
+            generateBuildings();
         }
 
-        // --- DIFFICULTY ---
         function setDiff(d) {
             diff = d;
             document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
             document.querySelector(`[data-diff="${d}"]`).classList.add('active');
         }
 
-        // --- FLOW ---
         function showTutorial() {
             state = 'TUTORIAL';
             document.getElementById('startScreen').classList.add('hidden');
@@ -352,8 +576,8 @@
             document.getElementById('startScreen').classList.add('hidden');
             document.getElementById('tutorialScreen').classList.add('hidden');
             document.getElementById('gameOverScreen').classList.add('hidden');
-            bull.y = innerHeight + 100;
-            bull.ty = innerHeight - 150;
+            bull.y = innerHeight + 120;
+            bull.ty = innerHeight - 160;
         }
 
         function reset() {
@@ -361,8 +585,8 @@
             score = 0; level = 1; lives = cfg.lives; combo = 0; maxCombo = 0;
             coins = []; particles = []; floatTexts = [];
             frames = 0; gameSpeed = 1;
-            bull.x = innerWidth/2; bull.y = innerHeight + 100;
-            bull.tx = innerWidth/2; bull.ty = innerHeight - 150;
+            bull.x = innerWidth/2; bull.y = innerHeight + 120;
+            bull.tx = innerWidth/2; bull.ty = innerHeight - 160;
             updateUI();
         }
 
@@ -370,40 +594,41 @@
             state = 'GAMEOVER';
             const entry = {
                 name: document.getElementById('playerName').value.trim() || 'Anonymous',
-                score: score, level: level, diff: diff,
+                score, level, year: LEVELS[Math.min(level-1, LEVELS.length-1)].year, diff,
                 date: new Date().toLocaleDateString()
             };
             leaderboard.push(entry);
             leaderboard.sort((a,b) => b.score - a.score);
-            leaderboard = leaderboard.slice(0, 15);
-            localStorage.setItem('btcBullLB', JSON.stringify(leaderboard));
+            leaderboard = leaderboard.slice(0, 20);
+            localStorage.setItem('btcBullLB_v2', JSON.stringify(leaderboard));
 
+            const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
             document.getElementById('finalScore').innerText = score.toLocaleString();
+            document.getElementById('yearReached').innerText = `Year: ${lvl.year} — ${lvl.name}`;
             document.getElementById('comboDisplay').innerText = `Best Combo: ${maxCombo}x`;
-            document.getElementById('levelReached').innerText = `Level Reached: ${level} (${LEVELS[level-1]?.name || 'Genesis'})`;
             renderLB();
             document.getElementById('gameOverScreen').classList.remove('hidden');
-            
-            // Crash chart
-            for(let i=0; i<15; i++) chartData[chartData.length-1-i] = 10;
+
+            for(let i=0; i<20; i++) chartData[chartData.length-1-i] = 5;
         }
 
         function renderLB() {
             const list = document.getElementById('lbList');
             list.innerHTML = leaderboard.slice(0,10).map((e,i) => {
                 const m = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-                const hl = e.score===score && e.name===document.getElementById('playerName').value ? 'bg-yellow-500/10' : '';
+                const hl = e.score===score ? 'bg-yellow-500/10' : '';
                 return `<div class="flex items-center gap-2 p-1 rounded ${hl}">
-                    <span class="w-6 text-center text-xs ${i<3?'text-yellow-400':'text-gray-500'}">${m}</span>
-                    <span class="flex-1 text-gray-300 truncate text-xs">${e.name}</span>
-                    <span class="text-yellow-400 text-xs">${e.score.toLocaleString()}</span>
-                    <span class="text-gray-600 text-[9px]">L${e.level}</span>
+                    <span class="w-5 text-center text-[10px] ${i<3?'text-yellow-400':'text-gray-600'}">${m}</span>
+                    <span class="flex-1 text-gray-300 truncate text-[11px]">${e.name}</span>
+                    <span class="text-gray-500 text-[9px]">${e.year}</span>
+                    <span class="text-yellow-400 text-[11px] font-bold">${e.score.toLocaleString()}</span>
                 </div>`;
             }).join('');
         }
 
         function shareScore() {
-            const t = `I caught ${score.toLocaleString()} sats in BTC Bull Run Level ${level}! 🐂₿ Can you beat me?`;
+            const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
+            const t = `I survived to ${lvl.year} (${lvl.name}) with ${score.toLocaleString()} sats in BTC Bull Run! 🐂₿ How far can you get?`;
             if(navigator.share) navigator.share({title:'BTC Bull Run', text:t});
             else { navigator.clipboard.writeText(t); showNotif('Copied!'); }
         }
@@ -417,25 +642,27 @@
         }
 
         function updateUI() {
+            const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
             document.getElementById('scoreDisplay').innerText = score.toLocaleString();
             document.getElementById('levelDisplay').innerText = level;
+            document.getElementById('yearDisplay').innerText = lvl.year;
             document.getElementById('livesDisplay').innerText = lives;
         }
 
-        // --- SPAWNING ---
         function spawnCoin() {
             const cfg = DIFFICULTY[diff];
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
-            const margin = 60;
+            const margin = 70;
             const x = Math.random()*(innerWidth-margin*2)+margin;
-            const isGold = Math.random() > 0.82;
+            const isGold = Math.random() > 0.8;
             const isRainbow = Math.random() > 0.96;
-            
+
             coins.push({
-                x, y: -40,
-                r: isRainbow?24:isGold?20:18,
+                x, y: -45,
+                r: isRainbow?26:isGold?22:19,
                 speed: (Math.random()*(cfg.speedMax-cfg.speedMin)+cfg.speedMin)*gameSpeed*lvl.coinRate,
-                rot: Math.random()*Math.PI*2, rotSpd: (Math.random()-0.5)*0.06,
+                rot: Math.random()*Math.PI*2,
+                rotSpd: (Math.random()-0.5)*0.05,
                 type: isRainbow?'RAINBOW':isGold?'GOLD':'NORMAL',
                 pulse: 0
             });
@@ -444,18 +671,17 @@
         function explode(x,y,color,count=12) {
             for(let i=0;i<count;i++) particles.push({
                 x,y, vx:(Math.random()-0.5)*10, vy:(Math.random()-0.5)*10,
-                life:1, color, size: Math.random()*5+2, grav:0.15
+                life:1, color, size: Math.random()*5+2, grav:0.12
             });
         }
 
         function floatText(x,y,text,color='#FFD700') {
-            floatTexts.push({x,y,text,color,life:1,vy:-2.5,scale:1});
+            floatTexts.push({x,y,text,color,life:1,vy:-2.2,scale:1});
         }
 
-        // --- UPDATE ---
         function update() {
             if(state !== 'PLAYING') {
-                if(state === 'MENU') { bull.wob += 0.04; bull.y = innerHeight/2+Math.sin(bull.wob)*15; }
+                if(state === 'MENU') { bull.wob += 0.03; bull.y = innerHeight/2+Math.sin(bull.wob)*12; }
                 return;
             }
 
@@ -463,25 +689,25 @@
             const cfg = DIFFICULTY[diff];
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
 
-            // Level up every 500 sats
-            const newLevel = Math.min(Math.floor(score/500)+1, LEVELS.length);
+            // Level up every 600 sats
+            const newLevel = Math.min(Math.floor(score/600)+1, LEVELS.length);
             if(newLevel !== level) {
                 level = newLevel;
-                showNotif(`LEVEL ${level}: ${lvl.name}!`);
-                gameSpeed += 0.08;
+                const newLvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
+                showNotif(`${newLvl.year}: ${newLvl.name}`);
+                gameSpeed += 0.06;
                 updateUI();
             }
 
-            // Speed scaling
-            if(frames%500===0) gameSpeed += 0.03;
+            if(frames%500===0) gameSpeed += 0.025;
 
             // Bull movement
             bull.tx = mouseX;
-            bull.ty = Math.min(mouseY, innerHeight-120);
-            if(keys['ArrowLeft']||keys['a']) bull.tx -= 12;
-            if(keys['ArrowRight']||keys['d']) bull.tx += 12;
-            if(keys['ArrowUp']||keys['w']) bull.ty -= 12;
-            if(keys['ArrowDown']||keys['s']) bull.ty += 12;
+            bull.ty = Math.min(mouseY, innerHeight-130);
+            if(keys['ArrowLeft']||keys['a']) bull.tx -= 14;
+            if(keys['ArrowRight']||keys['d']) bull.tx += 14;
+            if(keys['ArrowUp']||keys['w']) bull.ty -= 14;
+            if(keys['ArrowDown']||keys['s']) bull.ty += 14;
 
             bull.x += (bull.tx-bull.x)*bull.speed;
             bull.y += (bull.ty-bull.y)*bull.speed;
@@ -490,49 +716,46 @@
 
             const dx = bull.tx-bull.x, dy = bull.ty-bull.y;
             if(Math.abs(dx)>2||Math.abs(dy)>2) {
-                let ta = Math.atan2(dy,dx), diff = ta-bull.ang;
-                while(diff<-Math.PI) diff+=Math.PI*2;
-                while(diff>Math.PI) diff-=Math.PI*2;
-                bull.ang += diff*0.1;
+                let ta = Math.atan2(dy,dx), d = ta-bull.ang;
+                while(d<-Math.PI) d+=Math.PI*2;
+                while(d>Math.PI) d-=Math.PI*2;
+                bull.ang += d*0.1;
             }
             bull.wob += 0.1;
 
             // Coins
-            const spawnMod = Math.max(25, Math.floor(cfg.spawnRate - gameSpeed*4));
+            const spawnMod = Math.max(22, Math.floor(cfg.spawnRate - gameSpeed*4));
             if(frames%spawnMod===0) spawnCoin();
 
             for(let i=coins.length-1;i>=0;i--) {
                 let c = coins[i];
-                c.y += c.speed; c.rot += c.rotSpd; c.pulse += 0.08;
+                c.y += c.speed; c.rot += c.rotSpd; c.pulse += 0.07;
 
                 const dist = Math.hypot(bull.x-c.x, bull.y-c.y);
                 if(dist < bull.r + c.r + cfg.hitBonus) {
-                    // CAUGHT
                     combo++;
                     if(combo>maxCombo) maxCombo=combo;
                     let pts = c.type==='RAINBOW'?100:c.type==='GOLD'?25:10;
-                    pts = Math.floor(pts*(1+combo*0.08));
+                    pts = Math.floor(pts*(1+combo*0.07));
                     score += pts;
 
                     const col = c.type==='RAINBOW'?`hsl(${frames*5%360},100%,60%)`:c.type==='GOLD'?'#FFD700':'#F7931A';
-                    explode(c.x,c.y,col,c.type==='RAINBOW'?25:12);
-                    floatText(c.x,c.y-25,`+${pts}${combo>1?' '+combo+'x':''}`,col);
+                    explode(c.x,c.y,col,c.type==='RAINBOW'?28:14);
+                    floatText(c.x,c.y-28,`+${pts}${combo>1?' '+combo+'x':''}`,col);
 
-                    // Pump chart
-                    chartData[chartData.length-1] = Math.min(90, chartData[chartData.length-1]+8);
+                    chartData[chartData.length-1] = Math.min(92, chartData[chartData.length-1]+10);
 
                     coins.splice(i,1);
                     updateUI();
                     continue;
                 }
 
-                // Missed
-                if(c.y > innerHeight+30) {
+                if(c.y > innerHeight+40) {
                     combo = 0;
                     lives--;
-                    for(let j=0;j<8;j++) chartData[chartData.length-1-j] = Math.max(8, chartData[chartData.length-1-j]-12);
-                    explode(c.x, innerHeight-10, '#EF4444', 15);
-                    floatText(c.x, innerHeight-40, 'MISS!', '#EF4444');
+                    for(let j=0;j<10;j++) chartData[chartData.length-1-j] = Math.max(5, chartData[chartData.length-1-j]-15);
+                    explode(c.x, innerHeight-15, '#EF4444', 18);
+                    floatText(c.x, innerHeight-45, 'MISS!', '#EF4444');
                     coins.splice(i,1);
                     updateUI();
                     if(lives<=0) { gameOver(); return; }
@@ -542,31 +765,29 @@
             // Particles
             for(let i=particles.length-1;i>=0;i--) {
                 let p = particles[i];
-                p.x += p.vx; p.y += p.vy; p.vy += p.grav; p.life -= 0.025;
+                p.x += p.vx; p.y += p.vy; p.vy += p.grav; p.life -= 0.022;
                 if(p.life<=0) particles.splice(i,1);
             }
 
             // Float texts
             for(let i=floatTexts.length-1;i>=0;i--) {
                 let t = floatTexts[i];
-                t.y += t.vy; t.life -= 0.018; t.scale = 1+(1-t.life)*0.3;
+                t.y += t.vy; t.life -= 0.016; t.scale = 1+(1-t.life)*0.25;
                 if(t.life<=0) floatTexts.splice(i,1);
             }
 
-            // Chart update
-            if(frames%8===0) {
+            // Chart
+            if(frames%6===0) {
                 chartData.shift();
                 let last = chartData[chartData.length-1];
-                chartData.push(Math.max(8, Math.min(92, last + (Math.random()-0.45)*14)));
+                chartData.push(Math.max(5, Math.min(95, last + (Math.random()-0.42)*16)));
             }
         }
 
-        // --- RENDER ---
         function draw() {
             gX.clearRect(0,0,innerWidth,innerHeight);
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)];
 
-            // Coins
             coins.forEach(c => {
                 gX.save();
                 gX.translate(c.x,c.y); gX.rotate(c.rot);
@@ -575,27 +796,31 @@
 
                 if(c.type==='RAINBOW') {
                     gX.shadowColor = `hsl(${frames*4%360},100%,50%)`;
-                    gX.shadowBlur = 18;
+                    gX.shadowBlur = 20;
                 } else if(c.type==='GOLD') {
-                    gX.shadowColor = '#FFD700'; gX.shadowBlur = 12;
+                    gX.shadowColor = '#FFD700'; gX.shadowBlur = 14;
                 }
 
-                gX.fillStyle = c.type==='RAINBOW'?`hsl(${frames*3%360},80%,55%)`:c.type==='GOLD'?'#FFD700':'#F7931A';
+                gX.fillStyle = c.type==='RAINBOW'?`hsl(${frames*3%360},85%,55%)`:c.type==='GOLD'?'#FFD700':'#F7931A';
                 gX.beginPath(); gX.arc(0,0,c.r,0,Math.PI*2); gX.fill();
                 gX.strokeStyle = c.type==='RAINBOW'?'#fff':'#B45309';
-                gX.lineWidth = 2; gX.stroke();
+                gX.lineWidth = 2.5; gX.stroke();
 
+                // Bitcoin B symbol
                 gX.fillStyle = c.type==='RAINBOW'?'#fff':'#5D2E0C';
                 gX.font = `bold ${c.r}px 'Fredoka One'`;
                 gX.textAlign = 'center'; gX.textBaseline = 'middle';
                 gX.fillText('₿',0,1);
+
+                // Shine effect
+                gX.fillStyle = 'rgba(255,255,255,0.3)';
+                gX.beginPath(); gX.arc(-c.r*0.3,-c.r*0.3,c.r*0.25,0,Math.PI*2); gX.fill();
+
                 gX.restore();
             });
 
-            // Bull
             drawBull(bull.x, bull.y, bull.ang, bull.wob);
 
-            // Particles
             particles.forEach(p => {
                 gX.globalAlpha = p.life;
                 gX.fillStyle = p.color;
@@ -603,45 +828,48 @@
                 gX.globalAlpha = 1;
             });
 
-            // Float texts
             floatTexts.forEach(t => {
                 gX.save();
                 gX.globalAlpha = t.life;
                 gX.translate(t.x,t.y); gX.scale(t.scale,t.scale);
-                gX.font = "bold 18px 'Fredoka One'";
+                gX.font = "bold 17px 'Fredoka One'";
                 gX.textAlign = 'center';
                 gX.fillStyle = t.color;
-                gX.strokeStyle = 'black'; gX.lineWidth = 3;
+                gX.strokeStyle = 'rgba(0,0,0,0.8)'; gX.lineWidth = 3;
                 gX.strokeText(t.text,0,0); gX.fillText(t.text,0,0);
                 gX.restore();
             });
 
-            // Combo indicator
             if(combo>1) {
                 gX.save();
-                gX.globalAlpha = 0.4+Math.sin(frames*0.1)*0.2;
-                gX.font = "bold 36px 'Fredoka One'";
+                gX.globalAlpha = 0.35+Math.sin(frames*0.1)*0.15;
+                gX.font = "bold 32px 'Fredoka One'";
                 gX.textAlign = 'center';
-                gX.fillStyle = '#FFD700';
-                gX.strokeStyle = '#B45309'; gX.lineWidth = 4;
-                gX.strokeText(`${combo}x COMBO!`, innerWidth/2, 90);
-                gX.fillText(`${combo}x COMBO!`, innerWidth/2, 90);
+                gX.fillStyle = lvl.accent;
+                gX.strokeStyle = '#000'; gX.lineWidth = 4;
+                gX.strokeText(`${combo}x COMBO!`, innerWidth/2, 85);
+                gX.fillText(`${combo}x COMBO!`, innerWidth/2, 85);
                 gX.restore();
             }
 
-            // Level name flash
-            if(frames<120 && level>1) {
+            // Year/Level banner on level up
+            if(frames<90 && level>1) {
                 gX.save();
-                gX.globalAlpha = Math.max(0, 1-frames/120);
-                gX.font = "bold 28px 'Press Start 2P'";
+                gX.globalAlpha = Math.max(0, 1-frames/90);
+                gX.font = "bold 22px 'Press Start 2P'";
                 gX.textAlign = 'center';
-                gX.fillStyle = LEVELS[level-1].chartUp;
-                gX.fillText(`LEVEL ${level}: ${LEVELS[level-1].name}`, innerWidth/2, innerHeight/2);
+                gX.fillStyle = lvl.accent;
+                gX.strokeStyle = '#000'; gX.lineWidth = 5;
+                gX.strokeText(`${lvl.year}`, innerWidth/2, innerHeight/2-20);
+                gX.fillText(`${lvl.year}`, innerWidth/2, innerHeight/2-20);
+                gX.font = "bold 14px 'Fredoka One'";
+                gX.fillStyle = '#fff';
+                gX.fillText(lvl.name, innerWidth/2, innerHeight/2+15);
+                gX.fillText(lvl.description, innerWidth/2, innerHeight/2+40);
                 gX.restore();
             }
         }
 
-        // --- BACKGROUND CHART (Retro) ---
         function drawBg() {
             const w = bgC.width, h = bgC.height;
             const lvl = LEVELS[Math.min(level-1, LEVELS.length-1)] || LEVELS[0];
@@ -649,32 +877,117 @@
             bgX.fillStyle = lvl.bg;
             bgX.fillRect(0,0,w,h);
 
-            // Grid
+            // Nebula clouds
+            if(lvl.hasNebula) {
+                nebulaParticles.forEach(np => {
+                    np.x += np.vx; np.y += np.vy;
+                    if(np.x < -np.r) np.x = w+np.r;
+                    if(np.x > w+np.r) np.x = -np.r;
+                    if(np.y < -np.r) np.y = h+np.r;
+                    if(np.y > h+np.r) np.y = -np.r;
+
+                    const grad = bgX.createRadialGradient(np.x, np.y, 0, np.x, np.y, np.r);
+                    grad.addColorStop(0, `hsla(${np.hue + frames*0.1}, 70%, 60%, ${np.alpha})`);
+                    grad.addColorStop(1, 'transparent');
+                    bgX.fillStyle = grad;
+                    bgX.beginPath(); bgX.arc(np.x, np.y, np.r, 0, Math.PI*2); bgX.fill();
+                });
+            }
+
+            // Stars
+            const starLimit = lvl.starCount;
+            for(let i=0; i<Math.min(stars.length, starLimit); i++) {
+                const s = stars[i];
+                s.twinkle += 0.02;
+                const alpha = 0.3 + Math.sin(s.twinkle)*0.3;
+                bgX.fillStyle = `rgba(255,255,255,${alpha})`;
+                bgX.beginPath(); bgX.arc(s.x, s.y, s.size, 0, Math.PI*2); bgX.fill();
+
+                // Shooting stars occasionally
+                if(Math.random() > 0.9995) {
+                    bgX.strokeStyle = `rgba(255,255,255,0.6)`;
+                    bgX.lineWidth = 1;
+                    bgX.beginPath();
+                    bgX.moveTo(s.x, s.y);
+                    bgX.lineTo(s.x - 30, s.y + 10);
+                    bgX.stroke();
+                }
+            }
+
+            // Buildings (cyberpunk silhouette)
+            if(lvl.hasBuildings) {
+                bgX.fillStyle = 'rgba(0,0,0,0.4)';
+                buildings.forEach(b => {
+                    bgX.fillRect(b.x, h - b.h - 20, b.w, b.h);
+                    // Windows
+                    if(b.windows && frames % 60 < 30) {
+                        bgX.fillStyle = `rgba(${lvl.accent === '#FF00CC' ? '255,0,200' : '255,200,0'},0.15)`;
+                        for(let wy = h-b.h; wy < h-30; wy += 15) {
+                            for(let wx = b.x+5; wx < b.x+b.w-5; wx += 12) {
+                                if(Math.random() > 0.6) bgX.fillRect(wx, wy, 6, 8);
+                            }
+                        }
+                        bgX.fillStyle = 'rgba(0,0,0,0.4)';
+                    }
+                });
+            }
+
+            // Grid floor (perspective)
+            if(lvl.hasGridFloor) {
+                bgX.strokeStyle = lvl.grid;
+                bgX.lineWidth = 1;
+                bgX.globalAlpha = 0.5;
+                // Horizontal lines (perspective)
+                for(let i=0; i<10; i++) {
+                    const y = h - 20 - i*i*3;
+                    bgX.beginPath(); bgX.moveTo(0, y); bgX.lineTo(w, y); bgX.stroke();
+                }
+                // Vertical lines converging
+                for(let i=-10; i<=10; i++) {
+                    const x = w/2 + i * 60;
+                    bgX.beginPath(); bgX.moveTo(w/2, h-100); bgX.lineTo(x, h-20); bgX.stroke();
+                }
+                bgX.globalAlpha = 1;
+            }
+
+            // Rings (Saturn-style, for space levels)
+            if(lvl.hasRings) {
+                bgX.save();
+                bgX.translate(w/2, h*0.3);
+                bgX.rotate(frames * 0.002);
+                bgX.strokeStyle = `rgba(255,255,255,0.06)`;
+                bgX.lineWidth = 2;
+                for(let r=80; r<300; r+=25) {
+                    bgX.beginPath();
+                    bgX.ellipse(0, 0, r, r*0.15, 0, 0, Math.PI*2);
+                    bgX.stroke();
+                }
+                bgX.restore();
+            }
+
+            // Grid overlay
             bgX.strokeStyle = lvl.grid;
-            bgX.lineWidth = 1;
-            for(let x=0;x<w;x+=50) { bgX.beginPath(); bgX.moveTo(x,0); bgX.lineTo(x,h); bgX.stroke(); }
-            for(let y=0;y<h;y+=50) { bgX.beginPath(); bgX.moveTo(0,y); bgX.lineTo(w,y); bgX.stroke(); }
+            bgX.lineWidth = 0.5;
+            for(let x=0; x<w; x+=lvl.gridSize) { bgX.beginPath(); bgX.moveTo(x,0); bgX.lineTo(x,h); bgX.stroke(); }
+            for(let y=0; y<h; y+=lvl.gridSize) { bgX.beginPath(); bgX.moveTo(0,y); bgX.lineTo(w,y); bgX.stroke(); }
 
             // Candlestick chart
             const cw = w / chartData.length;
-            let prevY = h - (chartData[0]/100)*h*0.6 + h*0.15;
+            let prevY = h - (chartData[0]/100)*h*0.55 + h*0.12;
 
-            for(let i=1;i<chartData.length;i++) {
+            for(let i=1; i<chartData.length; i++) {
                 const val = chartData[i], prev = chartData[i-1];
                 const x = i*cw;
-                const y = h - (val/100)*h*0.6 + h*0.15;
+                const y = h - (val/100)*h*0.55 + h*0.12;
                 const up = val >= prev;
 
                 bgX.strokeStyle = up ? lvl.chartUp : lvl.chartDown;
-                bgX.globalAlpha = 0.25;
-                bgX.beginPath();
-                bgX.moveTo((i-1)*cw, prevY);
-                bgX.lineTo(x, y);
-                bgX.stroke();
+                bgX.globalAlpha = 0.2;
+                bgX.beginPath(); bgX.moveTo((i-1)*cw, prevY); bgX.lineTo(x, y); bgX.stroke();
 
                 bgX.fillStyle = up ? lvl.chartUp : lvl.chartDown;
-                bgX.shadowColor = up ? lvl.chartUp : lvl.chartDown;
-                bgX.shadowBlur = 6;
+                bgX.shadowColor = up ? lvl.glowUp : lvl.glowDown;
+                bgX.shadowBlur = 8;
                 const ch = Math.abs(y-prevY)+2, cy = Math.min(y,prevY);
                 bgX.fillRect(x-cw/2+1, cy, Math.max(2,cw-1), Math.max(2,ch));
                 bgX.shadowBlur = 0;
@@ -684,113 +997,307 @@
             }
 
             // Floor line
-            bgX.strokeStyle = 'rgba(255,50,50,0.4)';
+            bgX.strokeStyle = 'rgba(255,50,50,0.35)';
             bgX.lineWidth = 2;
-            bgX.setLineDash([8,8]);
-            bgX.beginPath(); bgX.moveTo(0,h-15); bgX.lineTo(w,h-15); bgX.stroke();
+            bgX.setLineDash([6,6]);
+            bgX.beginPath(); bgX.moveTo(0,h-18); bgX.lineTo(w,h-18); bgX.stroke();
             bgX.setLineDash([]);
 
-            bgX.fillStyle = 'rgba(255,50,50,0.5)';
-            bgX.font = '10px monospace';
-            bgX.fillText('SUPPORT LEVEL — DON\'T BREAK IT', 12, h-22);
+            bgX.fillStyle = 'rgba(255,50,50,0.4)';
+            bgX.font = '9px monospace';
+            bgX.fillText('SUPPORT LEVEL — BREAK IT AND DIE', 12, h-26);
 
             requestAnimationFrame(drawBg);
         }
 
-        // --- DRAW BULL ---
-        function drawBull(x,y,ang,wob) {
+        // ============================================
+        // THE BULL — Redesigned to look unmistakably bullish
+        // ============================================
+        function drawBull(x, y, ang, wob) {
             gX.save();
-            gX.translate(x,y);
+            gX.translate(x, y);
+
+            // Face the movement direction
             const fa = Math.atan2(Math.sin(ang), Math.cos(ang));
             gX.rotate(fa + Math.PI/2);
-            const sc = 1+Math.sin(wob)*0.03;
-            gX.scale(sc,sc);
+
+            const sc = 1 + Math.sin(wob)*0.025;
+            gX.scale(sc, sc);
 
             // Shadow
-            gX.fillStyle = 'rgba(0,0,0,0.25)';
-            gX.beginPath(); gX.ellipse(0,38,28,14,0,0,Math.PI*2); gX.fill();
+            gX.fillStyle = 'rgba(0,0,0,0.3)';
+            gX.beginPath();
+            gX.ellipse(0, 42, 32, 16, 0, 0, Math.PI*2);
+            gX.fill();
 
-            // Legs
-            gX.strokeStyle = '#92400E';
-            gX.lineWidth = 7; gX.lineCap = 'round';
-            const rc = Math.sin(wob*3)*12;
-            gX.beginPath(); gX.moveTo(-14,16); gX.lineTo(-18+rc,42); gX.stroke();
-            gX.beginPath(); gX.moveTo(14,16); gX.lineTo(18-rc,42); gX.stroke();
-            gX.beginPath(); gX.moveTo(-8,12); gX.lineTo(-10-rc,36); gX.stroke();
-            gX.beginPath(); gX.moveTo(8,12); gX.lineTo(10+rc,36); gX.stroke();
+            // === LEGS — Thick, muscular, bull-like stance ===
+            gX.strokeStyle = '#7C2D12'; // Darker brown
+            gX.lineWidth = 9;
+            gX.lineCap = 'round';
 
-            // Body
-            gX.fillStyle = '#D97706';
-            gX.beginPath(); gX.ellipse(0,0,32,42,0,0,Math.PI*2); gX.fill();
-            gX.fillStyle = '#B45309';
-            gX.beginPath(); gX.ellipse(0,-4,18,28,0,0,Math.PI*2); gX.fill();
+            const runCycle = Math.sin(wob * 2.8) * 14;
 
-            // Head
-            gX.translate(0,-42);
+            // Back legs (power stance)
+            gX.beginPath(); gX.moveTo(-18, 18); gX.lineTo(-24 + runCycle, 46); gX.stroke();
+            gX.beginPath(); gX.moveTo(18, 18); gX.lineTo(24 - runCycle, 46); gX.stroke();
 
-            // Ears
-            gX.fillStyle = '#D97706';
-            gX.beginPath(); gX.ellipse(-18,-4,7,14,-0.5,0,Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(18,-4,7,14,0.5,0,Math.PI*2); gX.fill();
+            // Front legs (shorter, planted)
+            gX.beginPath(); gX.moveTo(-12, 14); gX.lineTo(-14 - runCycle*0.6, 40); gX.stroke();
+            gX.beginPath(); gX.moveTo(12, 14); gX.lineTo(14 + runCycle*0.6, 40); gX.stroke();
 
-            // Face
-            gX.fillStyle = '#D97706';
-            gX.beginPath(); gX.arc(0,0,20,0,Math.PI*2); gX.fill();
+            // Hooves
+            gX.fillStyle = '#1F1F1F';
+            gX.beginPath(); gX.ellipse(-24 + runCycle, 48, 5, 3, 0, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(24 - runCycle, 48, 5, 3, 0, 0, Math.PI*2); gX.fill();
 
-            // Snout
-            gX.fillStyle = '#FDE68A';
-            gX.beginPath(); gX.ellipse(0,10,12,9,0,0,Math.PI*2); gX.fill();
+            // === BODY — Broad, heavy, bullish ===
+            // Main torso (wide shoulders, thick chest)
+            gX.fillStyle = '#C2410C'; // Orange-700, richer
+            gX.beginPath();
+            gX.ellipse(0, -2, 38, 46, 0, 0, Math.PI*2);
+            gX.fill();
 
-            // Nose ring (gold)
-            gX.strokeStyle = '#FFD700'; gX.lineWidth = 2;
-            gX.beginPath(); gX.arc(0,14,4,0,Math.PI,false); gX.stroke();
+            // Chest highlight (muscular definition)
+            gX.fillStyle = '#EA580C'; // Orange-600
+            gX.beginPath();
+            gX.ellipse(0, -8, 28, 32, 0, 0, Math.PI*2);
+            gX.fill();
 
-            // Nose
-            gX.fillStyle = '#1F2937';
-            gX.beginPath(); gX.arc(0,12,3.5,0,Math.PI*2); gX.fill();
+            // Shoulder muscles
+            gX.fillStyle = '#9A3412'; // Orange-800
+            gX.beginPath(); gX.ellipse(-22, -5, 12, 18, -0.3, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(22, -5, 12, 18, 0.3, 0, Math.PI*2); gX.fill();
 
-            // Eyes
-            gX.fillStyle = 'white';
-            gX.beginPath(); gX.ellipse(-9,-4,6,7,-0.15,0,Math.PI*2); gX.fill();
-            gX.beginPath(); gX.ellipse(9,-4,6,7,0.15,0,Math.PI*2); gX.fill();
+            // === NECK — Thick, powerful, connects to big head ===
+            gX.fillStyle = '#C2410C';
+            gX.beginPath();
+            gX.moveTo(-18, -25);
+            gX.quadraticCurveTo(-22, -45, -14, -55);
+            gX.lineTo(14, -55);
+            gX.quadraticCurveTo(22, -45, 18, -25);
+            gX.fill();
 
+            // Neck muscle lines
+            gX.strokeStyle = '#9A3412';
+            gX.lineWidth = 2;
+            gX.beginPath(); gX.moveTo(-8, -30); gX.lineTo(-10, -50); gX.stroke();
+            gX.beginPath(); gX.moveTo(8, -30); gX.lineTo(10, -50); gX.stroke();
+
+            // === HEAD — Large, heavy, unmistakably bovine ===
+            gX.translate(0, -52);
+
+            // Jaw / lower face (wide, square)
+            gX.fillStyle = '#C2410C';
+            gX.beginPath();
+            gX.moveTo(-20, 5);
+            gX.quadraticCurveTo(-24, 20, -16, 28);
+            gX.lineTo(16, 28);
+            gX.quadraticCurveTo(24, 20, 20, 5);
+            gX.fill();
+
+            // Upper head / forehead (broad)
+            gX.fillStyle = '#EA580C';
+            gX.beginPath();
+            gX.ellipse(0, -5, 22, 20, 0, 0, Math.PI*2);
+            gX.fill();
+
+            // Forehead ridge (brow bone)
+            gX.fillStyle = '#9A3412';
+            gX.beginPath();
+            gX.ellipse(0, -12, 18, 8, 0, 0, Math.PI*2);
+            gX.fill();
+
+            // Ears — small, pointed back (angry bull)
+            gX.fillStyle = '#C2410C';
+            gX.beginPath();
+            gX.moveTo(-20, -8);
+            gX.quadraticCurveTo(-32, -14, -28, -22);
+            gX.quadraticCurveTo(-22, -18, -18, -12);
+            gX.fill();
+            gX.beginPath();
+            gX.moveTo(20, -8);
+            gX.quadraticCurveTo(32, -14, 28, -22);
+            gX.quadraticCurveTo(22, -18, 18, -12);
+            gX.fill();
+
+            // Inner ear
+            gX.fillStyle = '#FDBA74';
+            gX.beginPath(); gX.ellipse(-24, -16, 4, 6, -0.5, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(24, -16, 4, 6, 0.5, 0, Math.PI*2); gX.fill();
+
+            // Snout / nose area
+            gX.fillStyle = '#FDBA74'; // Light orange
+            gX.beginPath();
+            gX.ellipse(0, 18, 14, 10, 0, 0, Math.PI*2);
+            gX.fill();
+
+            // Nostrils
+            gX.fillStyle = '#1F1F1F';
+            gX.beginPath(); gX.ellipse(-6, 20, 3, 4, 0.2, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(6, 20, 3, 4, -0.2, 0, Math.PI*2); gX.fill();
+
+            // Nose ring (gold bull ring)
+            gX.strokeStyle = '#FFD700';
+            gX.lineWidth = 2.5;
+            gX.beginPath();
+            gX.arc(0, 24, 5, 0.2, Math.PI - 0.2);
+            gX.stroke();
+
+            // Ring highlight
+            gX.strokeStyle = '#FFED4A';
+            gX.lineWidth = 1;
+            gX.beginPath();
+            gX.arc(0, 24, 5, 0.5, 1.5);
+            gX.stroke();
+
+            // Mouth line (slight smirk)
+            gX.strokeStyle = '#7C2D12';
+            gX.lineWidth = 2;
+            gX.beginPath();
+            gX.moveTo(-8, 26);
+            gX.quadraticCurveTo(0, 30, 10, 25);
+            gX.stroke();
+
+            // === EYES — Intense, forward-facing, predator-like ===
+            // Eye sockets (deep set)
+            gX.fillStyle = '#7C2D12';
+            gX.beginPath(); gX.ellipse(-10, -2, 8, 9, -0.1, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(10, -2, 8, 9, 0.1, 0, Math.PI*2); gX.fill();
+
+            // Eyeballs
+            gX.fillStyle = '#FFF';
+            gX.beginPath(); gX.ellipse(-10, -2, 6, 7, -0.1, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(10, -2, 6, 7, 0.1, 0, Math.PI*2); gX.fill();
+
+            // Pupils (tracking movement slightly)
+            const lookX = Math.sin(wob * 0.5) * 1.5;
             gX.fillStyle = '#000';
-            gX.beginPath(); gX.arc(-9+Math.sin(wob)*1.5,-4,2.5,0,Math.PI*2); gX.fill();
-            gX.beginPath(); gX.arc(9+Math.sin(wob)*1.5,-4,2.5,0,Math.PI*2); gX.fill();
+            gX.beginPath(); gX.arc(-10 + lookX, -2, 3.5, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.arc(10 + lookX, -2, 3.5, 0, Math.PI*2); gX.fill();
 
-            // Eyebrows (angry bull)
-            gX.strokeStyle = '#5D2E0C'; gX.lineWidth = 2.5;
-            gX.beginPath(); gX.moveTo(-16,-14); gX.lineTo(-4,-10); gX.stroke();
-            gX.beginPath(); gX.moveTo(16,-14); gX.lineTo(4,-10); gX.stroke();
+            // Eye shine
+            gX.fillStyle = '#FFF';
+            gX.beginPath(); gX.arc(-11.5 + lookX, -3.5, 1.2, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.arc(8.5 + lookX, -3.5, 1.2, 0, Math.PI*2); gX.fill();
 
-            // Horns (gold)
-            gX.strokeStyle = '#FDE68A'; gX.lineWidth = 4; gX.lineCap = 'round';
-            gX.beginPath(); gX.moveTo(-12,-18); gX.quadraticCurveTo(-26,-38,-22,-52); gX.stroke();
-            gX.beginPath(); gX.moveTo(12,-18); gX.quadraticCurveTo(26,-38,22,-52); gX.stroke();
-            gX.fillStyle = '#FDE68A';
-            gX.beginPath(); gX.arc(-22,-52,3,0,Math.PI*2); gX.fill();
-            gX.beginPath(); gX.arc(22,-52,3,0,Math.PI*2); gX.fill();
+            // === EYEBROWS — Heavy, angry, bullish ===
+            gX.fillStyle = '#4A1D0B'; // Very dark brown
+            gX.beginPath();
+            gX.moveTo(-20, -10);
+            gX.quadraticCurveTo(-12, -16, -4, -12);
+            gX.lineTo(-4, -8);
+            gX.quadraticCurveTo(-12, -12, -20, -6);
+            gX.fill();
+            gX.beginPath();
+            gX.moveTo(20, -10);
+            gX.quadraticCurveTo(12, -16, 4, -12);
+            gX.lineTo(4, -8);
+            gX.quadraticCurveTo(12, -12, 20, -6);
+            gX.fill();
 
-            // Laser eyes at 10x+ combo
+            // === HORNS — The defining feature. Thick, curved, dangerous ===
+            // Horn base (thick)
+            gX.fillStyle = '#E5E5E5'; // Off-white bone
+            gX.beginPath(); gX.ellipse(-14, -22, 8, 6, -0.4, 0, Math.PI*2); gX.fill();
+            gX.beginPath(); gX.ellipse(14, -22, 8, 6, 0.4, 0, Math.PI*2); gX.fill();
+
+            // Main horn curve
+            gX.strokeStyle = '#E5E5E5';
+            gX.lineWidth = 7;
+            gX.lineCap = 'round';
+            gX.beginPath();
+            gX.moveTo(-16, -24);
+            gX.bezierCurveTo(-35, -45, -45, -65, -30, -80);
+            gX.stroke();
+
+            gX.beginPath();
+            gX.moveTo(16, -24);
+            gX.bezierCurveTo(35, -45, 45, -65, 30, -80);
+            gX.stroke();
+
+            // Horn shadow/darker side
+            gX.strokeStyle = '#B8B8B8';
+            gX.lineWidth = 3;
+            gX.beginPath();
+            gX.moveTo(-16, -24);
+            gX.bezierCurveTo(-32, -42, -40, -60, -28, -75);
+            gX.stroke();
+
+            gX.beginPath();
+            gX.moveTo(16, -24);
+            gX.bezierCurveTo(32, -42, 40, -60, 28, -75);
+            gX.stroke();
+
+            // Horn tips (sharp)
+            gX.fillStyle = '#D4D4D4';
+            gX.beginPath();
+            gX.moveTo(-30, -80);
+            gX.lineTo(-26, -88);
+            gX.lineTo(-22, -78);
+            gX.fill();
+
+            gX.beginPath();
+            gX.moveTo(30, -80);
+            gX.lineTo(26, -88);
+            gX.lineTo(22, -78);
+            gX.fill();
+
+            // Horn rings (texture)
+            gX.strokeStyle = '#B8B8B8';
+            gX.lineWidth = 1.5;
+            for(let i=0; i<4; i++) {
+                const t = i/4;
+                const hx1 = -16 + (-30+16)*t + Math.sin(t*Math.PI)*-5;
+                const hy1 = -24 + (-80+24)*t;
+                gX.beginPath(); gX.arc(hx1, hy1, 4-t, 0, Math.PI*2); gX.stroke();
+
+                const hx2 = 16 + (30-16)*t - Math.sin(t*Math.PI)*-5;
+                const hy2 = -24 + (-80+24)*t;
+                gX.beginPath(); gX.arc(hx2, hy2, 4-t, 0, Math.PI*2); gX.stroke();
+            }
+
+            // === LASER EYES (10x+ combo) ===
             if(combo >= 10) {
-                gX.strokeStyle = '#FF0000'; gX.lineWidth = 3;
-                gX.shadowColor = '#FF0000'; gX.shadowBlur = 15;
-                gX.beginPath(); gX.moveTo(-9,-4); gX.lineTo(-9,-90); gX.stroke();
-                gX.beginPath(); gX.moveTo(9,-4); gX.lineTo(9,-90); gX.stroke();
+                const laserIntensity = Math.min((combo - 10) / 20, 1);
+                gX.save();
+                gX.globalAlpha = 0.6 + Math.sin(frames * 0.3) * 0.3;
+
+                // Glow
+                gX.shadowColor = '#FF0000';
+                gX.shadowBlur = 25;
+
+                // Left laser
+                gX.strokeStyle = '#FF0000';
+                gX.lineWidth = 4;
+                gX.beginPath(); gX.moveTo(-10, -2); gX.lineTo(-10, -120); gX.stroke();
+
+                // Core
+                gX.strokeStyle = '#FFFFFF';
+                gX.lineWidth = 2;
+                gX.beginPath(); gX.moveTo(-10, -2); gX.lineTo(-10, -120); gX.stroke();
+
+                // Right laser
+                gX.strokeStyle = '#FF0000';
+                gX.lineWidth = 4;
+                gX.beginPath(); gX.moveTo(10, -2); gX.lineTo(10, -120); gX.stroke();
+
+                gX.strokeStyle = '#FFFFFF';
+                gX.lineWidth = 2;
+                gX.beginPath(); gX.moveTo(10, -2); gX.lineTo(10, -120); gX.stroke();
+
                 gX.shadowBlur = 0;
+                gX.restore();
             }
 
             gX.restore();
         }
 
-        // --- MAIN LOOP ---
         function loop() {
             update();
             draw();
             requestAnimationFrame(loop);
         }
 
-        // Start
         init();
 
     </script>
